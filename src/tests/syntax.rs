@@ -1,6 +1,7 @@
+use crate::syntax::Syntax;
+use colored::*;
 use speculate::speculate;
 use volt::{*, parser::*, rule::*, tree::*};
-use crate::syntax::Syntax;
 
 speculate!{
     before {
@@ -11,7 +12,7 @@ speculate!{
 
         #[allow(unused)]
         let expect_success = |input: &str, rule_id: &str|
-            Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect("parsing unexpectedly failed");
+            Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect(&"parsing unexpectedly failed".red().to_string());
 
         #[allow(unused)]
         let expect_success_eq = |input: &str, rule_id: &str, expected: SyntaxTree|
@@ -20,7 +21,7 @@ speculate!{
         // todo: マッチしなかった場合のみテストを通すための関数を作る
         #[allow(unused)]
         let expect_failure = |input: &str, rule_id: &str|
-            Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect_err("parsing unexpectedly succeeded");
+            Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect_err(&"parsing unexpectedly succeeded".cyan().to_string());
 
         #[allow(unused)]
         let expect_failure_eq = |input: &str, rule_id: &str, expected: ParserError|
