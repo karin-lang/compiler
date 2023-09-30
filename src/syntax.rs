@@ -45,8 +45,7 @@ struct Symbol {
 impl VoltModule for Symbol {
     fn new() -> Symbol {
         define_rules!{
-            // todo: replace separate_around() with around()
-            statement_end := choice![str("\n"), str(";")].separate_around(Symbol::statement_end_separator().min(0));
+            statement_end := choice![str("\n"), str(";")].around(Symbol::statement_end_separator().min(0));
             statement_end_separator := choice![str(" "), str("\t")];
             whitespace := choice![str(" "), str("\t"), str("\n")];
         }
