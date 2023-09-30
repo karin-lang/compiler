@@ -1,4 +1,4 @@
-use volt::{*, element::*, rule::*};
+use volt::{*, element::*};
 use volt_derive::VoltModuleDefinition;
 
 pub struct Syntax;
@@ -11,6 +11,7 @@ impl Syntax {
         volt.add_module(Symbol::new());
         volt.add_module(Identifier::new());
         volt.add_module(Function::new());
+        volt.add_module(Expression::new());
         volt.add_module(DataType::new());
         volt
     }
@@ -35,6 +36,7 @@ impl VoltModule for Main {
 
 #[derive(VoltModuleDefinition)]
 struct Symbol {
+    // todo: rename
     statement_end: Element,
     statement_end_separator: Element,
     whitespace: Element,
@@ -43,6 +45,7 @@ struct Symbol {
 impl VoltModule for Symbol {
     fn new() -> Symbol {
         define_rules!{
+            // todo: replace separate_around() with around()
             statement_end := choice![str("\n"), str(";")].separate_around(Symbol::statement_end_separator().min(0));
             statement_end_separator := choice![str(" "), str("\t")];
             whitespace := choice![str(" "), str("\t"), str("\n")];
@@ -77,11 +80,27 @@ impl VoltModule for Function {
                 str("fn").hide(), WHITESPACE(),
                 Identifier::identifier().expand_once().group("id"), WHITESPACE(),
                 str("(").hide(), WHITESPACE(),
-                Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).group("args").optional(),
+                Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
-                str("{").hide(), WHITESPACE(), str("}").hide(),
+                str("{").hide(), WHITESPACE(),
+                Expression::expression().separate_around(Symbol::statement_end().min(0).hide()).optional().group("exprs"), WHITESPACE(),
+                str("}").hide(),
             ];
             argument := seq![Identifier::identifier(), WHITESPACE(), DataType::data_type()];
+        }
+    }
+}
+
+#[derive(VoltModuleDefinition)]
+struct Expression {
+    expression: Element,
+}
+
+impl VoltModule for Expression {
+    fn new() -> Self {
+        define_rules!{
+            // todo: replace with expression rules
+            expression := choice![str("expr")];
         }
     }
 }

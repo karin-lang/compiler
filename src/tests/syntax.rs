@@ -11,15 +11,16 @@ speculate!{
 
         #[allow(unused)]
         let expect_success = |input: &str, rule_id: &str|
-            assert!(Parser::parse(volt, input, &RuleId(rule_id.to_string())).is_ok());
+            Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect("parsing unexpectedly failed");
 
         #[allow(unused)]
         let expect_success_eq = |input: &str, rule_id: &str, expected: SyntaxTree|
             assert_ast(input, rule_id, Ok(expected));
 
+        // todo: マッチしなかった場合のみテストを通すための関数を作る
         #[allow(unused)]
         let expect_failure = |input: &str, rule_id: &str|
-            assert!(Parser::parse(volt, input, &RuleId(rule_id.to_string())).is_err());
+            Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect_err("parsing unexpectedly succeeded");
 
         #[allow(unused)]
         let expect_failure_eq = |input: &str, rule_id: &str, expected: ParserError|
@@ -29,8 +30,8 @@ speculate!{
     describe "main" {
         it "separated by statement end" {
             expect_success("\n", "Main::main");
-            expect_success("fn f(){}\nfn f(){}", "Main::main");
-            expect_success("\nfn f(){}\nfn f(){}\n", "Main::main");
+            expect_success("fn f() {}\nfn f() {}", "Main::main");
+            expect_success("\nfn f() {}\nfn f() {}\n", "Main::main");
         }
 
         it "rejects semicolon separator" {
@@ -40,13 +41,13 @@ speculate!{
 
     describe "function" {
         it "can specify pub keyword optionally" {
-            expect_success("pub fn f(){}", "Function::function");
+            expect_success("pub fn f() {}", "Function::function");
 
-            expect_success("fn f(){}", "Function::function");
+            expect_success("fn f() {}", "Function::function");
         }
 
-        it "accepts zero arguments" {
-            expect_success_eq("fn f(){}", "Function::function", tree!{
+        it "accepts zero arguments and zero expressions" {
+            expect_success_eq("fn f() {}", "Function::function", tree!{
                 node!{
                     "Function::function" => vec![
                         node!{
@@ -54,13 +55,23 @@ speculate!{
                                 leaf!("f"),
                             ]
                         },
+                        node!{
+                            "args" => vec![]
+                        },
+                        node!{
+                            "exprs" => vec![]
+                        },
                     ]
                 }
             });
         }
 
-        it "accepts multiple arguments and separator at the end" {
-            expect_success_eq("fn f(a usize, b usize, ){}", "Function::function", tree!{
+        it "rejects only one argument separator" {
+            expect_failure("fn f(,) {}", "Function::function");
+        }
+
+        it "accepts multiple arguments" {
+            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!{
                 node!{
                     "Function::function" => vec![
                         node!{
@@ -108,13 +119,16 @@ speculate!{
                                 },
                             ]
                         },
+                        node!{
+                            "exprs" => vec![]
+                        },
                     ]
                 }
             });
         }
 
-        it "can contain expression and statement" {
-            expect_success_eq("fn f(){}", "Function::function", tree!{
+        it "accepts argument separator at the end" {
+            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!{
                 node!{
                     "Function::function" => vec![
                         node!{
@@ -122,9 +136,117 @@ speculate!{
                                 leaf!("f"),
                             ]
                         },
+                        node!{
+                            "args" => vec![
+                                node!{
+                                    "Function::argument" => vec![
+                                        node!{
+                                            "Identifier::identifier" => vec![
+                                                leaf!("a"),
+                                            ]
+                                        },
+                                        node!{
+                                            "DataType::data_type" => vec![
+                                                node!{
+                                                    "DataType::primitive" => vec![
+                                                        leaf!("usize"),
+                                                    ]
+                                                },
+                                            ]
+                                        },
+                                    ]
+                                },
+                                node!{
+                                    "Function::argument" => vec![
+                                        node!{
+                                            "Identifier::identifier" => vec![
+                                                leaf!("b"),
+                                            ]
+                                        },
+                                        node!{
+                                            "DataType::data_type" => vec![
+                                                node!{
+                                                    "DataType::primitive" => vec![
+                                                        leaf!("usize"),
+                                                    ]
+                                                },
+                                            ]
+                                        },
+                                    ]
+                                },
+                            ]
+                        },
+                        node!{
+                            "exprs" => vec![]
+                        },
                     ]
                 }
             });
+        }
+
+        it "can contain a single expression in a line" {
+            expect_success_eq("fn f() {expr}", "Function::function", tree!{
+                node!{
+                    "Function::function" => vec![
+                        node!{
+                            "id" => vec![
+                                leaf!("f"),
+                            ]
+                        },
+                        node!{
+                            "args" => vec![]
+                        },
+                        node!{
+                            "exprs" => vec![
+                                node!{
+                                    "Expression::expression" => vec![
+                                        leaf!("expr"),
+                                    ]
+                                },
+                            ]
+                        },
+                    ]
+                }
+            });
+        }
+
+        it "accepts expression separators around a single expression" {
+            expect_success("fn f() { ;\nexpr ;\n}", "Function::function");
+        }
+
+        it "can contain multiple expressions in lines" {
+            expect_success_eq("fn f() {expr\nexpr}", "Function::function", tree!{
+                node!{
+                    "Function::function" => vec![
+                        node!{
+                            "id" => vec![
+                                leaf!("f"),
+                            ]
+                        },
+                        node!{
+                            "args" => vec![]
+                        },
+                        node!{
+                            "exprs" => vec![
+                                node!{
+                                    "Expression::expression" => vec![
+                                        leaf!("expr"),
+                                    ]
+                                },
+                                node!{
+                                    "Expression::expression" => vec![
+                                        leaf!("expr"),
+                                    ]
+                                },
+                            ]
+                        },
+                    ]
+                }
+            });
+        }
+
+        it "accepts expression separators around multiple expressions" {
+            expect_success("fn f() {\nexpr\nexpr\n}", "Function::function");
         }
     }
 
