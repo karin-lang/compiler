@@ -48,23 +48,15 @@ speculate!{
         }
 
         it "accepts zero arguments and zero expressions" {
-            expect_success_eq("fn f() {}", "Function::function", tree!{
-                node!{
-                    "Function::function" => vec![
-                        node!{
-                            "id" => vec![
-                                leaf!("f"),
-                            ]
-                        },
-                        node!{
-                            "args" => vec![]
-                        },
-                        node!{
-                            "exprs" => vec![]
-                        },
-                    ]
-                }
-            });
+            expect_success_eq("fn f() {}", "Function::function", tree!(
+                node!("Function::function" => [
+                    node!("id" => [
+                        leaf!("f"),
+                    ]),
+                    node!("args" => []),
+                    node!("exprs" => []),
+                ])
+            ));
         }
 
         it "rejects only one argument separator" {
@@ -72,143 +64,85 @@ speculate!{
         }
 
         it "accepts multiple arguments" {
-            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!{
-                node!{
-                    "Function::function" => vec![
-                        node!{
-                            "id" => vec![
-                                leaf!("f"),
-                            ]
-                        },
-                        node!{
-                            "args" => vec![
-                                node!{
-                                    "Function::argument" => vec![
-                                        node!{
-                                            "Identifier::identifier" => vec![
-                                                leaf!("a"),
-                                            ]
-                                        },
-                                        node!{
-                                            "DataType::data_type" => vec![
-                                                node!{
-                                                    "DataType::primitive" => vec![
-                                                        leaf!("usize"),
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                    ]
-                                },
-                                node!{
-                                    "Function::argument" => vec![
-                                        node!{
-                                            "Identifier::identifier" => vec![
-                                                leaf!("b"),
-                                            ]
-                                        },
-                                        node!{
-                                            "DataType::data_type" => vec![
-                                                node!{
-                                                    "DataType::primitive" => vec![
-                                                        leaf!("usize"),
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                    ]
-                                },
-                            ]
-                        },
-                        node!{
-                            "exprs" => vec![]
-                        },
-                    ]
-                }
-            });
+            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
+                node!("Function::function" => [
+                    node!("id" => [
+                        leaf!("f"),
+                    ]),
+                    node!("args" => [
+                        node!("Function::argument" => [
+                            node!("Identifier::identifier" => [
+                                leaf!("a"),
+                            ]),
+                            node!("DataType::data_type" => [
+                                node!("DataType::primitive" => [
+                                    leaf!("usize"),
+                                ]),
+                            ]),
+                        ]),
+                        node!("Function::argument" => [
+                            node!("Identifier::identifier" => [
+                                leaf!("b"),
+                            ]),
+                            node!("DataType::data_type" => [
+                                node!("DataType::primitive" => [
+                                    leaf!("usize"),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                    node!("exprs" => []),
+                ])
+            ));
         }
 
         it "accepts argument separator at the end" {
-            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!{
-                node!{
-                    "Function::function" => vec![
-                        node!{
-                            "id" => vec![
-                                leaf!("f"),
-                            ]
-                        },
-                        node!{
-                            "args" => vec![
-                                node!{
-                                    "Function::argument" => vec![
-                                        node!{
-                                            "Identifier::identifier" => vec![
-                                                leaf!("a"),
-                                            ]
-                                        },
-                                        node!{
-                                            "DataType::data_type" => vec![
-                                                node!{
-                                                    "DataType::primitive" => vec![
-                                                        leaf!("usize"),
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                    ]
-                                },
-                                node!{
-                                    "Function::argument" => vec![
-                                        node!{
-                                            "Identifier::identifier" => vec![
-                                                leaf!("b"),
-                                            ]
-                                        },
-                                        node!{
-                                            "DataType::data_type" => vec![
-                                                node!{
-                                                    "DataType::primitive" => vec![
-                                                        leaf!("usize"),
-                                                    ]
-                                                },
-                                            ]
-                                        },
-                                    ]
-                                },
-                            ]
-                        },
-                        node!{
-                            "exprs" => vec![]
-                        },
-                    ]
-                }
-            });
+            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
+                node!("Function::function" => [
+                    node!("id" => [
+                        leaf!("f"),
+                    ]),
+                    node!("args" => [
+                        node!("Function::argument" => [
+                            node!("Identifier::identifier" => [
+                                leaf!("a"),
+                            ]),
+                            node!("DataType::data_type" => [
+                                node!("DataType::primitive" => [
+                                    leaf!("usize"),
+                                ]),
+                            ]),
+                        ]),
+                        node!("Function::argument" => [
+                            node!("Identifier::identifier" => [
+                                leaf!("b"),
+                            ]),
+                            node!("DataType::data_type" => [
+                                node!("DataType::primitive" => [
+                                    leaf!("usize"),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                    node!("exprs" => []),
+                ])
+            ));
         }
 
         it "can contain a single expression in a line" {
-            expect_success_eq("fn f() {expr}", "Function::function", tree!{
-                node!{
-                    "Function::function" => vec![
-                        node!{
-                            "id" => vec![
-                                leaf!("f"),
-                            ]
-                        },
-                        node!{
-                            "args" => vec![]
-                        },
-                        node!{
-                            "exprs" => vec![
-                                node!{
-                                    "Expression::expression" => vec![
-                                        leaf!("expr"),
-                                    ]
-                                },
-                            ]
-                        },
-                    ]
-                }
-            });
+            expect_success_eq("fn f() {expr}", "Function::function", tree!(
+                node!("Function::function" => [
+                    node!("id" => [
+                        leaf!("f"),
+                    ]),
+                    node!("args" => []),
+                    node!("exprs" => [
+                        node!("Expression::expression" => [
+                            leaf!("expr"),
+                        ]),
+                    ]),
+                ])
+            ));
         }
 
         it "accepts expression separators around a single expression" {
@@ -216,34 +150,22 @@ speculate!{
         }
 
         it "can contain multiple expressions in lines" {
-            expect_success_eq("fn f() {expr\nexpr}", "Function::function", tree!{
-                node!{
-                    "Function::function" => vec![
-                        node!{
-                            "id" => vec![
-                                leaf!("f"),
-                            ]
-                        },
-                        node!{
-                            "args" => vec![]
-                        },
-                        node!{
-                            "exprs" => vec![
-                                node!{
-                                    "Expression::expression" => vec![
-                                        leaf!("expr"),
-                                    ]
-                                },
-                                node!{
-                                    "Expression::expression" => vec![
-                                        leaf!("expr"),
-                                    ]
-                                },
-                            ]
-                        },
-                    ]
-                }
-            });
+            expect_success_eq("fn f() {expr\nexpr}", "Function::function", tree!(
+                node!("Function::function" => [
+                    node!("id" => [
+                        leaf!("f"),
+                    ]),
+                    node!("args" => []),
+                    node!("exprs" => [
+                        node!("Expression::expression" => [
+                            leaf!("expr"),
+                        ]),
+                        node!("Expression::expression" => [
+                            leaf!("expr"),
+                        ]),
+                    ]),
+                ])
+            ));
         }
 
         it "accepts expression separators around multiple expressions" {
@@ -253,23 +175,19 @@ speculate!{
 
     describe "identifier" {
         it "accepts alphabetic start" {
-            expect_success_eq("a", "Identifier::identifier", tree!{
-                node!{
-                    "Identifier::identifier" => vec![
-                        leaf!("a"),
-                    ]
-                }
-            });
+            expect_success_eq("a", "Identifier::identifier", tree!(
+                node!("Identifier::identifier" => [
+                    leaf!("a"),
+                ])
+            ));
         }
 
         it "accepts multiple characters" {
-            expect_success_eq("a0_", "Identifier::identifier", tree!{
-                node!{
-                    "Identifier::identifier" => vec![
-                        leaf!("a0_"),
-                    ]
-                }
-            });
+            expect_success_eq("a0_", "Identifier::identifier", tree!(
+                node!("Identifier::identifier" => [
+                    leaf!("a0_"),
+                ])
+            ));
         }
 
         it "rejects numeric start" {
@@ -289,17 +207,13 @@ speculate!{
 
     describe "data type" {
         it "primitive type" {
-            expect_success_eq("usize", "DataType::data_type", tree!{
-                node!{
-                    "DataType::data_type" => vec![
-                        node!{
-                            "DataType::primitive" => vec![
-                                leaf!("usize"),
-                            ]
-                        },
-                    ]
-                }
-            });
+            expect_success_eq("usize", "DataType::data_type", tree!(
+                node!("DataType::data_type" => [
+                    node!("DataType::primitive" => [
+                        leaf!("usize"),
+                    ]),
+                ])
+            ));
         }
     }
 }
