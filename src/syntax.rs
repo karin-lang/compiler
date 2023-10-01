@@ -36,17 +36,16 @@ impl VoltModule for Main {
 
 #[derive(VoltModuleDefinition)]
 struct Symbol {
-    // todo: rename
-    statement_end: Element,
-    statement_end_separator: Element,
+    expression_separator: Element,
+    around_expression_separator: Element,
     whitespace: Element,
 }
 
 impl VoltModule for Symbol {
     fn new() -> Symbol {
         define_rules!{
-            statement_end := choice![str("\n"), str(";")].around(Symbol::statement_end_separator().min(0));
-            statement_end_separator := choice![str(" "), str("\t")];
+            expression_separator := choice![str("\n"), str(";")].around(Symbol::around_expression_separator().min(0));
+            around_expression_separator := choice![str(" "), str("\t")];
             whitespace := choice![str(" "), str("\t"), str("\n")];
         }
     }
@@ -82,7 +81,7 @@ impl VoltModule for Function {
                 Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
                 str("{").hide(), WHITESPACE(),
-                Expression::expression().separate_around(Symbol::statement_end().min(0).hide()).optional().group("exprs"), WHITESPACE(),
+                Expression::expression().separate_around(Symbol::expression_separator().min(0).hide()).optional().group("exprs"), WHITESPACE(),
                 str("}").hide(),
             ];
             argument := seq![Identifier::identifier(), WHITESPACE(), DataType::data_type()];

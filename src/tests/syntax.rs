@@ -34,7 +34,7 @@ speculate!{
     }
 
     describe "main" {
-        it "separated by statement end" {
+        it "separated by expression separator" {
             expect_success("\n", "Main::main");
             expect_success("fn f() {}\nfn f() {}", "Main::main");
             expect_success("\nfn f() {}\nfn f() {}\n", "Main::main");
@@ -201,11 +201,11 @@ speculate!{
     }
 
     describe "symbol" {
-        describe "statement end" {
-            it "accepts multiple whitespaces around statement end optionally" {
-                expect_success("\n", "Symbol::statement_end");
-                expect_success(";", "Symbol::statement_end");
-                expect_success("  \n  ", "Symbol::statement_end");
+        describe "expression separator" {
+            it "accepts zero or more whitespaces around expression separator" {
+                expect_success("\n", "Symbol::expression_separator");
+                expect_success(";", "Symbol::expression_separator");
+                expect_success("  \n  ", "Symbol::expression_separator");
             }
         }
     }
