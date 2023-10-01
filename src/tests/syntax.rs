@@ -18,10 +18,15 @@ speculate!{
         let expect_success_eq = |input: &str, rule_id: &str, expected: SyntaxTree|
             assert_ast(input, rule_id, Ok(expected));
 
-        // todo: マッチしなかった場合のみテストを通すための関数を作る
         #[allow(unused)]
         let expect_failure = |input: &str, rule_id: &str|
             Parser::parse(volt, input, &RuleId(rule_id.to_string())).expect_err(&"parsing unexpectedly succeeded".cyan().to_string());
+
+        #[allow(unused)]
+        let expect_unmatch_failure = |input: &str, rule_id: &str|
+            if Parser::parse(volt, input, &RuleId(rule_id.to_string())) != Err(ParserError::NoMatchedRule) {
+                panic!("{}", "input unexpectedly matched syntax rule".cyan());
+            };
 
         #[allow(unused)]
         let expect_failure_eq = |input: &str, rule_id: &str, expected: ParserError|
@@ -36,7 +41,7 @@ speculate!{
         }
 
         it "rejects semicolon separator" {
-            expect_failure(";", "Main::main");
+            expect_unmatch_failure(";", "Main::main");
         }
     }
 
@@ -60,7 +65,7 @@ speculate!{
         }
 
         it "rejects only one argument separator" {
-            expect_failure("fn f(,) {}", "Function::function");
+            expect_unmatch_failure("fn f(,) {}", "Function::function");
         }
 
         it "accepts multiple arguments" {
