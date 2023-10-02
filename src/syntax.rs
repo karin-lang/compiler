@@ -121,37 +121,45 @@ impl VoltModule for Literal {
     fn new() -> Self {
         let integer_reducer = |children: Vec<SyntaxChild>| {
             let leaf = children.get_leaf(0);
-            let new_leaf = SyntaxChild::leaf(leaf.start.clone(), leaf.value.replace('_', ""));
+            let pure_value = leaf.value.replace('_', "");
+            let new_leaf = SyntaxChild::leaf(leaf.start.clone(), pure_value.clone());
+            let mut errors = Vec::new();
 
-            // todo: エラーを複数出せるようにする→テスト追加
-            // todo: starts_with_zero エラーでの数値の文字数判定を変える ('_00'に対応)→テスト追加
-            match &leaf.value {
-                value if value.starts_with('_') || value.ends_with('_') => vec![
+            if leaf.value.starts_with('_') || leaf.value.ends_with('_') {
+                errors.push(
                     SyntaxChild::error(
                         "digit_separator_on_side".to_string(),
-                        vec![new_leaf],
+                        vec![new_leaf.clone()],
                     ),
-                ],
-                value if value.len() >= 2 && value.starts_with('0') => vec![
+                );
+            }
+
+            if pure_value.len() >= 2 && pure_value.starts_with('0') {
+                errors.push(
                     SyntaxChild::error(
                         "starts_with_zero".to_string(),
-                        vec![new_leaf],
+                        vec![new_leaf.clone()],
                     ),
-                ],
-                value => {
-                    for ch in value.chars() {
-                        if let 'A'..='F' = ch {
-                            return vec![
-                                SyntaxChild::error(
-                                    "has_capital_letter".to_string(),
-                                    vec![new_leaf],
-                                ),
-                            ];
-                        }
-                    }
+                );
+            }
 
-                    vec![new_leaf]
-                },
+            for ch in pure_value.chars() {
+                if let 'A'..='F' = ch {
+                    errors.push(
+                        SyntaxChild::error(
+                            "has_capital_letter".to_string(),
+                            vec![new_leaf.clone()],
+                        ),
+                    );
+
+                    break;
+                }
+            }
+
+            if errors.len() == 0 {
+                vec![new_leaf]
+            } else {
+                errors
             }
         };
 

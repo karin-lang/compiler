@@ -227,38 +227,12 @@ speculate!{
                     expect_unmatch_failure("0b2", "Literal::number");
                 }
 
-                it "rejects digit separator on side" {
+                it "reduced by integer reducer" {
                     expect_success_eq("0b_1", "Literal::number", tree!(
                         node!("Literal::number" => [
                             node!("value" => [
                                 node!("Literal::binary_number" => [
                                     error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-
-                    expect_success_eq("0b1_", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::binary_number" => [
-                                    error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-                }
-
-                it "rejects zero at the start" {
-                    expect_success("0b0", "Literal::number");
-
-                    expect_success_eq("0b01", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::binary_number" => [
-                                    error!("starts_with_zero", [
-                                        leaf!("01"),
-                                    ]),
                                 ]),
                             ]),
                         ])
@@ -279,38 +253,12 @@ speculate!{
                     ));
                 }
 
-                it "rejects digit separator on side" {
+                it "reduced by integer reducer" {
                     expect_success_eq("0o_1", "Literal::number", tree!(
                         node!("Literal::number" => [
                             node!("value" => [
                                 node!("Literal::octal_number" => [
                                     error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-
-                    expect_success_eq("0o1_", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::octal_number" => [
-                                    error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-                }
-
-                it "rejects zero at the start" {
-                    expect_success("0o0", "Literal::number");
-
-                    expect_success_eq("0o01", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::octal_number" => [
-                                    error!("starts_with_zero", [
-                                        leaf!("01"),
-                                    ]),
                                 ]),
                             ]),
                         ])
@@ -331,60 +279,12 @@ speculate!{
                     ));
                 }
 
-                it "rejects capital letters" {
-                    expect_success_eq("0xA", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::hexadecimal_number" => [
-                                    error!("has_capital_letter", [leaf!("A")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-
-                    expect_success_eq("0xF", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::hexadecimal_number" => [
-                                    error!("has_capital_letter", [leaf!("F")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-                }
-
-                it "rejects digit separator on side" {
+                it "reduced by integer reducer" {
                     expect_success_eq("0x_1", "Literal::number", tree!(
                         node!("Literal::number" => [
                             node!("value" => [
                                 node!("Literal::hexadecimal_number" => [
                                     error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-
-                    expect_success_eq("0x1_", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::hexadecimal_number" => [
-                                    error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-                }
-
-                it "rejects zero at the start" {
-                    expect_success("0x0", "Literal::number");
-
-                    expect_success_eq("0x01", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::hexadecimal_number" => [
-                                    error!("starts_with_zero", [
-                                        leaf!("01"),
-                                    ]),
                                 ]),
                             ]),
                         ])
@@ -405,38 +305,12 @@ speculate!{
                     ));
                 }
 
-                it "rejects digit separator on side" {
+                it "reduced by integer reducer" {
                     expect_success_eq("_1", "Literal::number", tree!(
                         node!("Literal::number" => [
                             node!("value" => [
                                 node!("Literal::decimal_number" => [
                                     error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-
-                    expect_success_eq("1_", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::decimal_number" => [
-                                    error!("digit_separator_on_side", [leaf!("1")]),
-                                ]),
-                            ]),
-                        ])
-                    ));
-                }
-
-                it "rejects zero at the start" {
-                    expect_success("0", "Literal::number");
-
-                    expect_success_eq("01", "Literal::number", tree!(
-                        node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::decimal_number" => [
-                                    error!("starts_with_zero", [
-                                        leaf!("01"),
-                                    ]),
                                 ]),
                             ]),
                         ])
@@ -525,6 +399,98 @@ speculate!{
                             node!("value" => [
                                 node!("Literal::decimal_number" => [
                                     leaf!("12"),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "rejects digit separator on side" {
+                    expect_success_eq("_1", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::decimal_number" => [
+                                    error!("digit_separator_on_side", [leaf!("1")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+
+                    expect_success_eq("1_", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::decimal_number" => [
+                                    error!("digit_separator_on_side", [leaf!("1")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "rejects zero at the start" {
+                    expect_success("0", "Literal::number");
+
+                    expect_success_eq("01", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::decimal_number" => [
+                                    error!("starts_with_zero", [
+                                        leaf!("01"),
+                                    ]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "occurs multiple errors all together" {
+                    expect_success_eq("0x_00A", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("digit_separator_on_side", [
+                                        leaf!("00A"),
+                                    ]),
+                                    error!("starts_with_zero", [
+                                        leaf!("00A"),
+                                    ]),
+                                    error!("has_capital_letter", [
+                                        leaf!("00A"),
+                                    ]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "rejects capital letters in A to F" {
+                    expect_success_eq("0xA", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("has_capital_letter", [leaf!("A")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+
+                    expect_success_eq("0xF", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("has_capital_letter", [leaf!("F")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "generates only one capital letter error" {
+                    expect_success_eq("0xAB", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("has_capital_letter", [leaf!("AB")]),
                                 ]),
                             ]),
                         ])
