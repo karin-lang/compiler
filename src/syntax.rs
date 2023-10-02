@@ -191,6 +191,7 @@ impl VoltModule for Literal {
                     Literal::decimal_number(),
                 ].group("value"),
                 Literal::number_exponent().optional(),
+                DataType::primitive_number().optional(),
             ];
             binary_number := seq![
                 str("0b").hide(),

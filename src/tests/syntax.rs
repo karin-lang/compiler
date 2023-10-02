@@ -211,6 +211,23 @@ speculate!{
     }
 
     describe "literal" {
+        describe "number" {
+            it "accepts data type suffix" {
+                expect_success_eq("0usize", "Literal::number", tree!(
+                    node!("Literal::number" => [
+                        node!("value" => [
+                            node!("Literal::decimal_number" => [
+                                leaf!("0"),
+                            ]),
+                        ]),
+                        node!("DataType::primitive_number" => [
+                            leaf!("usize"),
+                        ]),
+                    ])
+                ));
+            }
+        }
+
         describe "integer" {
             describe "binary" {
                 it "accepts zero to one number" {
@@ -501,7 +518,7 @@ speculate!{
     }
 
     describe "data type" {
-        it "primitive type" {
+        it "primitive number" {
             expect_success_eq("usize", "DataType::data_type", tree!(
                 node!("DataType::data_type" => [
                     node!("DataType::primitive" => [
