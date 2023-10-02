@@ -109,12 +109,15 @@ struct Literal {
     literal: Element,
     boolean: Element,
     number: Element,
+    integer: Element,
     binary_number: Element,
     octal_number: Element,
     hexadecimal_number: Element,
     decimal_number: Element,
     decimal_number_value: Element,
     number_exponent: Element,
+    float_number: Element,
+    float_number_value: Element,
 }
 
 impl VoltModule for Literal {
@@ -163,6 +166,37 @@ impl VoltModule for Literal {
             }
         };
 
+        let float_reducer = |children: Vec<SyntaxChild>| {
+            let leaf = children.get_leaf(0);
+            let pure_value = leaf.value.replace('_', "");
+            let new_leaf = SyntaxChild::leaf(leaf.start.clone(), pure_value.clone());
+            let mut errors = Vec::new();
+
+            if leaf.value.starts_with('_') || leaf.value.ends_with('_') {
+                errors.push(
+                    SyntaxChild::error(
+                        "digit_separator_on_side".to_string(),
+                        vec![new_leaf.clone()],
+                    ),
+                );
+            }
+
+            if pure_value.len() >= 2 && pure_value.ends_with('0') {
+                errors.push(
+                    SyntaxChild::error(
+                        "ends_with_zero".to_string(),
+                        vec![new_leaf.clone()],
+                    ),
+                );
+            }
+
+            if errors.len() == 0 {
+                vec![new_leaf]
+            } else {
+                errors
+            }
+        };
+
         let exponent_symbol_reducer = |children: Vec<SyntaxChild>| {
             let leaf = children.get_leaf(0);
 
@@ -182,7 +216,11 @@ impl VoltModule for Literal {
         define_rules!{
             literal := choice![Literal::boolean(), Literal::number()];
             boolean := choice![str("true"), str("false")];
-            number := seq![
+            number := choice![
+                Literal::float_number(),
+                Literal::integer().expand_once(),
+            ];
+            integer := seq![
                 // Parses decimal number at the last not to consume '0' in base prefix.
                 choice![
                     Literal::binary_number(),
@@ -191,6 +229,7 @@ impl VoltModule for Literal {
                     Literal::decimal_number(),
                 ].group("value"),
                 Literal::number_exponent().optional(),
+                // todo: add float type checker
                 DataType::primitive_number().optional(),
             ];
             binary_number := seq![
@@ -209,6 +248,14 @@ impl VoltModule for Literal {
             decimal_number_value := choice![chars("0-9"), str("_")].min(1).join().reduce(integer_reducer);
             // todo: use replace()
             number_exponent := seq![choice![str("e+"), str("e-"), str("e")].reduce(exponent_symbol_reducer), Literal::decimal_number_value().expand_once().group("value")];
+            float_number := seq![
+                Literal::decimal_number_value().expand_once().group("integer"),
+                str(".").hide(),
+                Literal::float_number_value().expand_once().group("float"),
+                // todo: add float type checker
+                DataType::primitive_number().optional(),
+            ];
+            float_number_value := choice![chars("0-9"), str("_")].min(1).join().reduce(float_reducer);
         }
     }
 }
@@ -225,7 +272,8 @@ impl VoltModule for DataType {
         define_rules!{
             data_type := choice![DataType::primitive()];
             primitive := choice![DataType::primitive_number().expand_once(), str("char"), str("str")];
-            primitive_number := choice![str("usize")];
+            // add: types
+            primitive_number := choice![str("usize"), str("f32")];
         }
     }
 }

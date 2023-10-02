@@ -460,6 +460,40 @@ speculate!{
                     ));
                 }
 
+                it "rejects capital letters in A to F" {
+                    expect_success_eq("0xA", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("has_capital_letter", [leaf!("A")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+
+                    expect_success_eq("0xF", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("has_capital_letter", [leaf!("F")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "generates only one capital letter error" {
+                    expect_success_eq("0xAB", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::hexadecimal_number" => [
+                                    error!("has_capital_letter", [leaf!("AB")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
                 it "occurs multiple errors all together" {
                     expect_success_eq("0x_00A", "Literal::number", tree!(
                         node!("Literal::number" => [
@@ -479,23 +513,149 @@ speculate!{
                         ])
                     ));
                 }
+            }
+        }
 
-                it "rejects capital letters in A to F" {
-                    expect_success_eq("0xA", "Literal::number", tree!(
+        describe "float" {
+            it "has integer and decimal part" {
+                expect_success_eq("0.0", "Literal::number", tree!(
+                    node!("Literal::number" => [
+                        node!("Literal::float_number" => [
+                            node!("integer" => [
+                                leaf!("0"),
+                            ]),
+                            node!("float" => [
+                                leaf!("0"),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            it "requires both of integer and decimal part" {
+                expect_unmatch_failure("0.", "Literal::number");
+                expect_unmatch_failure(".0", "Literal::number");
+            }
+
+            it "accepts data type suffix" {
+                expect_success_eq("0.0f32", "Literal::number", tree!(
+                    node!("Literal::number" => [
+                        node!("Literal::float_number" => [
+                            node!("integer" => [
+                                leaf!("0"),
+                            ]),
+                            node!("float" => [
+                                leaf!("0"),
+                            ]),
+                            node!("DataType::primitive_number" => [
+                                leaf!("f32"),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            it "integer part is reduced by integer reducer" {
+                expect_success_eq("_0.0", "Literal::number", tree!(
+                    node!("Literal::number" => [
+                        node!("Literal::float_number" => [
+                            node!("integer" => [
+                                error!("digit_separator_on_side", [leaf!("0")]),
+                            ]),
+                            node!("float" => [
+                                leaf!("0"),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            it "float part is reduced by float reducer" {
+                expect_success_eq("0._0", "Literal::number", tree!(
+                    node!("Literal::number" => [
+                        node!("Literal::float_number" => [
+                            node!("integer" => [
+                                leaf!("0"),
+                            ]),
+                            node!("float" => [
+                                error!("digit_separator_on_side", [leaf!("0")]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            describe "float reducer" {
+                it "hides digit separator" {
+                    expect_success_eq("0.0_1", "Literal::number", tree!(
                         node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::hexadecimal_number" => [
-                                    error!("has_capital_letter", [leaf!("A")]),
+                            node!("Literal::float_number" => [
+                                node!("integer" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("float" => [
+                                    leaf!("01"),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "rejects digit separator on side" {
+                    expect_success_eq("0._1", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("Literal::float_number" => [
+                                node!("integer" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("float" => [
+                                    error!("digit_separator_on_side", [leaf!("1")]),
                                 ]),
                             ]),
                         ])
                     ));
 
-                    expect_success_eq("0xF", "Literal::number", tree!(
+                    expect_success_eq("0.1_", "Literal::number", tree!(
                         node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::hexadecimal_number" => [
-                                    error!("has_capital_letter", [leaf!("F")]),
+                            node!("Literal::float_number" => [
+                                node!("integer" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("float" => [
+                                    error!("digit_separator_on_side", [leaf!("1")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "rejects zero at the end" {
+                    expect_success("0.0", "Literal::number");
+
+                    expect_success_eq("0.10", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("Literal::float_number" => [
+                                node!("integer" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("float" => [
+                                    error!("ends_with_zero", [leaf!("10")]),
+                                ]),
+                            ]),
+                        ])
+                    ));
+                }
+
+                it "occurs multiple errors all together" {
+                    expect_success_eq("0._10", "Literal::number", tree!(
+                        node!("Literal::number" => [
+                            node!("Literal::float_number" => [
+                                node!("integer" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("float" => [
+                                    error!("digit_separator_on_side", [leaf!("10")]),
+                                    error!("ends_with_zero", [leaf!("10")]),
                                 ]),
                             ]),
                         ])
