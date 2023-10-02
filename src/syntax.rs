@@ -1,4 +1,4 @@
-use volt::{*, element::*};
+use volt::{*, element::*, tree::*};
 use volt_derive::VoltModuleDefinition;
 
 pub struct Syntax;
@@ -12,6 +12,7 @@ impl Syntax {
         volt.add_module(Identifier::new());
         volt.add_module(Function::new());
         volt.add_module(Expression::new());
+        volt.add_module(Literal::new());
         volt.add_module(DataType::new());
         volt
     }
@@ -104,16 +105,118 @@ impl VoltModule for Expression {
 }
 
 #[derive(VoltModuleDefinition)]
+struct Literal {
+    literal: Element,
+    boolean: Element,
+    number: Element,
+    binary_number: Element,
+    octal_number: Element,
+    hexadecimal_number: Element,
+    decimal_number: Element,
+    decimal_number_value: Element,
+    number_exponent: Element,
+}
+
+impl VoltModule for Literal {
+    fn new() -> Self {
+        let integer_reducer = |children: Vec<SyntaxChild>| {
+            let leaf = children.get_leaf(0);
+            let new_leaf = SyntaxChild::leaf(leaf.start.clone(), leaf.value.replace('_', ""));
+
+            // todo: エラーを複数出せるようにする→テスト追加
+            // todo: starts_with_zero エラーでの数値の文字数判定を変える ('_00'に対応)→テスト追加
+            match &leaf.value {
+                value if value.starts_with('_') || value.ends_with('_') => vec![
+                    SyntaxChild::error(
+                        "digit_separator_on_side".to_string(),
+                        vec![new_leaf],
+                    ),
+                ],
+                value if value.len() >= 2 && value.starts_with('0') => vec![
+                    SyntaxChild::error(
+                        "starts_with_zero".to_string(),
+                        vec![new_leaf],
+                    ),
+                ],
+                value => {
+                    for ch in value.chars() {
+                        if let 'A'..='F' = ch {
+                            return vec![
+                                SyntaxChild::error(
+                                    "has_capital_letter".to_string(),
+                                    vec![new_leaf],
+                                ),
+                            ];
+                        }
+                    }
+
+                    vec![new_leaf]
+                },
+            }
+        };
+
+        let exponent_symbol_reducer = |children: Vec<SyntaxChild>| {
+            let leaf = children.get_leaf(0);
+
+            match leaf.value.as_str() {
+                "e" => vec![SyntaxChild::leaf(leaf.start.clone(), "+".to_string())],
+                value @ "e+" => vec![
+                    SyntaxChild::error(
+                        "explicit_plus_symbol".to_string(),
+                        vec![SyntaxChild::leaf(leaf.start.clone(), value.to_string())]
+                    )
+                ],
+                "e-" => vec![SyntaxChild::leaf(leaf.start.clone(), "-".to_string())],
+                _ => unreachable!(),
+            }
+        };
+
+        define_rules!{
+            literal := choice![Literal::boolean(), Literal::number()];
+            boolean := choice![str("true"), str("false")];
+            number := seq![
+                // Parses decimal number at the last not to consume '0' in base prefix.
+                choice![
+                    Literal::binary_number(),
+                    Literal::octal_number(),
+                    Literal::hexadecimal_number(),
+                    Literal::decimal_number(),
+                ].group("value"),
+                Literal::number_exponent().optional(),
+            ];
+            binary_number := seq![
+                str("0b").hide(),
+                choice![chars("0-1"), str("_")].min(1).join().reduce(integer_reducer),
+            ];
+            octal_number := seq![
+                str("0o").hide(),
+                choice![chars("0-7"), str("_")].min(1).join().reduce(integer_reducer),
+            ];
+            hexadecimal_number := seq![
+                str("0x").hide(),
+                choice![chars("0-9a-fA-F"), str("_")].min(1).join().reduce(integer_reducer),
+            ];
+            decimal_number := Literal::decimal_number_value().expand_once();
+            decimal_number_value := choice![chars("0-9"), str("_")].min(1).join().reduce(integer_reducer);
+            // todo: use replace()
+            number_exponent := seq![choice![str("e+"), str("e-"), str("e")].reduce(exponent_symbol_reducer), Literal::decimal_number_value().expand_once().group("value")];
+        }
+    }
+}
+
+#[derive(VoltModuleDefinition)]
 struct DataType {
     data_type: Element,
     primitive: Element,
+    primitive_number: Element,
 }
 
 impl VoltModule for DataType {
     fn new() -> DataType {
         define_rules!{
             data_type := choice![DataType::primitive()];
-            primitive := choice![str("usize"), str("char"), str("str")];
+            primitive := choice![DataType::primitive_number().expand_once(), str("char"), str("str")];
+            primitive_number := choice![str("usize")];
         }
     }
 }
