@@ -135,7 +135,7 @@ speculate!{
         }
 
         it "can contain a single expression in a line" {
-            expect_success_eq("fn f() {expr}", "Function::function", tree!(
+            expect_success_eq("fn f() {0}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("id" => [
                         leaf!("f"),
@@ -143,7 +143,15 @@ speculate!{
                     node!("args" => []),
                     node!("exprs" => [
                         node!("Expression::expression" => [
-                            leaf!("expr"),
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
                         ]),
                     ]),
                 ])
@@ -151,11 +159,11 @@ speculate!{
         }
 
         it "accepts expression separators around a single expression" {
-            expect_success("fn f() { ;\nexpr ;\n}", "Function::function");
+            expect_success("fn f() { ;\n0 ;\n}", "Function::function");
         }
 
         it "can contain multiple expressions in lines" {
-            expect_success_eq("fn f() {expr\nexpr}", "Function::function", tree!(
+            expect_success_eq("fn f() {0\n0}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("id" => [
                         leaf!("f"),
@@ -163,10 +171,26 @@ speculate!{
                     node!("args" => []),
                     node!("exprs" => [
                         node!("Expression::expression" => [
-                            leaf!("expr"),
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
                         ]),
                         node!("Expression::expression" => [
-                            leaf!("expr"),
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
                         ]),
                     ]),
                 ])
@@ -174,7 +198,7 @@ speculate!{
         }
 
         it "accepts expression separators around multiple expressions" {
-            expect_success("fn f() {\nexpr\nexpr\n}", "Function::function");
+            expect_success("fn f() {\n0\n0\n}", "Function::function");
         }
     }
 
@@ -686,6 +710,41 @@ speculate!{
                     ]),
                 ])
             ));
+        }
+
+        describe "generic" {
+            it "can contain generic type in arguments" {
+                expect_success_eq("t<t<T>, T>", "DataType::data_type", tree!(
+                    node!("DataType::data_type" => [
+                        node!("DataType::generic" => [
+                            node!("Identifier::identifier" => [
+                                leaf!("t"),
+                            ]),
+                            node!("args" => [
+                                node!("DataType::data_type" => [
+                                    node!("DataType::generic" => [
+                                        node!("Identifier::identifier" => [
+                                            leaf!("t"),
+                                        ]),
+                                        node!("args" => [
+                                            node!("Identifier::identifier" => [
+                                                leaf!("T"),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                                node!("Identifier::identifier" => [
+                                    leaf!("T"),
+                                ]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            it "rejects zero argument" {
+                expect_unmatch_failure("a<>", "DataType::generic");
+            }
         }
     }
 }

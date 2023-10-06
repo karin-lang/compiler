@@ -98,8 +98,10 @@ struct Expression {
 impl VoltModule for Expression {
     fn new() -> Self {
         define_rules!{
-            // todo: replace with expression rules
-            expression := choice![str("expr")];
+            expression := choice![
+                Literal::literal(),
+                DataType::data_type(),
+            ];
         }
     }
 }
@@ -265,15 +267,22 @@ struct DataType {
     data_type: Element,
     primitive: Element,
     primitive_number: Element,
+    generic: Element,
 }
 
 impl VoltModule for DataType {
     fn new() -> DataType {
         define_rules!{
-            data_type := choice![DataType::primitive()];
+            data_type := choice![DataType::primitive(), DataType::generic()];
             primitive := choice![DataType::primitive_number().expand_once(), str("char"), str("str")];
             // add: types
             primitive_number := choice![str("usize"), str("f32")];
+            generic := seq![
+                Identifier::identifier(), WHITESPACE(),
+                str("<").hide(), WHITESPACE(),
+                choice![DataType::data_type(), Identifier::identifier()].separate(str(",").separate_around(WHITESPACE()).hide()).group("args"),
+                str(">").hide(),
+            ];
         }
     }
 }
