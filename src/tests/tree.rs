@@ -13,6 +13,7 @@ speculate!{
                 node!("Main::main" => [
                     node!("Item::item" => [
                         node!("Function::function" => [
+                            node!("Main::accessibility" => []),
                             node!("name" => [
                                 leaf!("f"),
                             ]),
@@ -22,6 +23,7 @@ speculate!{
                     ]),
                     node!("Item::item" => [
                         node!("Function::function" => [
+                            node!("Main::accessibility" => []),
                             node!("name" => [
                                 leaf!("f"),
                             ]),
@@ -36,11 +38,13 @@ speculate!{
                     HirItem::Function(
                         HirFunction {
                             name: "f".to_string(),
+                            accessibility: HirAccessibility::Private,
                         },
                     ),
                     HirItem::Function(
                         HirFunction {
                             name: "f".to_string(),
+                            accessibility: HirAccessibility::Private,
                         },
                     ),
                 ],
@@ -48,11 +52,45 @@ speculate!{
         );
     }
 
+    describe "accessibility" {
+        it "private" {
+            assert_eq!(
+                tree_analysis.accessibility(
+                    node!("Main::accessibility" => []).into_node(),
+                ),
+                HirAccessibility::Private,
+            );
+        }
+
+        it "public" {
+            assert_eq!(
+                tree_analysis.accessibility(
+                    node!("Main::accessibility" => [
+                        leaf!("pub"),
+                    ]).into_node(),
+                ),
+                HirAccessibility::Public,
+            );
+        }
+
+        it "public in hako" {
+            assert_eq!(
+                tree_analysis.accessibility(
+                    node!("Main::accessibility" => [
+                        leaf!("pub@hako"),
+                    ]).into_node(),
+                ),
+                HirAccessibility::PublicInHako,
+            );
+        }
+    }
+
     describe "item" {
         it "hirify function" {
             assert_eq!(
                 tree_analysis.function(
                     node!("Function::function" => [
+                        node!("Main::accessibility" => []),
                         node!("name" => [
                             leaf!("f"),
                         ]),
@@ -62,6 +100,7 @@ speculate!{
                 ),
                 HirFunction {
                     name: "f".to_string(),
+                    accessibility: HirAccessibility::Private,
                 },
             );
         }

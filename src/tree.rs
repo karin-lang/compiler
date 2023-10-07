@@ -16,6 +16,18 @@ impl TreeAnalysis {
         }
     }
 
+    pub fn accessibility(&mut self, node: &SyntaxNode) -> HirAccessibility {
+        if let Some(content) = node.children.get_leaf_or_none(0) {
+            match content.value.as_str() {
+                "pub" => HirAccessibility::Public,
+                "pub@hako" => HirAccessibility::PublicInHako,
+                _ => unreachable!("unknown accessibility"),
+            }
+        } else {
+            HirAccessibility::Private
+        }
+    }
+
     pub fn item(&mut self, node: &SyntaxNode) -> HirItem {
         let content = node.children.get_node(0);
 
@@ -27,10 +39,11 @@ impl TreeAnalysis {
 
     pub fn function(&mut self, node: &SyntaxNode) -> HirFunction {
         let name = self.identifier(&node.children.find_node("name"));
+        let accessibility = self.accessibility(&node.children.find_node("Main::accessibility"));
 
         HirFunction {
             name,
-            // accessibility,
+            accessibility,
         }
     }
 

@@ -9,14 +9,14 @@ pub enum HirItem {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum Accessibility {
+pub enum HirAccessibility {
     Private,
     Public,
-    InHako,
+    PublicInHako,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFunction {
     pub name: String,
-    // pub accessibility: Accessibility,
+    pub accessibility: HirAccessibility,
 }
