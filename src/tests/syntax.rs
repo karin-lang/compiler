@@ -43,6 +43,30 @@ speculate!{
         it "rejects semicolon separator" {
             expect_unmatch_failure(";", "Main::main");
         }
+
+        describe "accessibility" {
+            it "private" {
+                expect_success_eq("", "Main::accessibility", tree!(
+                    node!("Main::accessibility" => [])
+                ));
+            }
+
+            it "public" {
+                expect_success_eq("pub", "Main::accessibility", tree!(
+                    node!("Main::accessibility" => [
+                        leaf!("pub"),
+                    ])
+                ));
+            }
+
+            it "public in hako" {
+                expect_success_eq("pub@hako", "Main::accessibility", tree!(
+                    node!("Main::accessibility" => [
+                        leaf!("pub@hako"),
+                    ])
+                ));
+            }
+        }
     }
 
     describe "function" {

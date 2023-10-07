@@ -32,7 +32,7 @@ impl VoltModule for Main {
         define_rules!{
             main := choice![Main::item().separate_around(WHITESPACE()), WHITESPACE()];
             item := choice![Function::function()];
-            accessibility := str("pub").optional();
+            accessibility := choice![str("pub@hako"), str("pub")].optional();
         }
     }
 }
