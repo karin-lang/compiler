@@ -55,7 +55,7 @@ speculate!{
         it "accepts zero arguments and zero expressions" {
             expect_success_eq("fn f() {}", "Function::function", tree!(
                 node!("Function::function" => [
-                    node!("id" => [
+                    node!("name" => [
                         leaf!("f"),
                     ]),
                     node!("args" => []),
@@ -71,7 +71,7 @@ speculate!{
         it "accepts multiple arguments" {
             expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
                 node!("Function::function" => [
-                    node!("id" => [
+                    node!("name" => [
                         leaf!("f"),
                     ]),
                     node!("args" => [
@@ -104,7 +104,7 @@ speculate!{
         it "accepts argument separator at the end" {
             expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
                 node!("Function::function" => [
-                    node!("id" => [
+                    node!("name" => [
                         leaf!("f"),
                     ]),
                     node!("args" => [
@@ -137,7 +137,7 @@ speculate!{
         it "can contain a single expression in a line" {
             expect_success_eq("fn f() {0}", "Function::function", tree!(
                 node!("Function::function" => [
-                    node!("id" => [
+                    node!("name" => [
                         leaf!("f"),
                     ]),
                     node!("args" => []),
@@ -165,7 +165,7 @@ speculate!{
         it "can contain multiple expressions in lines" {
             expect_success_eq("fn f() {0\n0}", "Function::function", tree!(
                 node!("Function::function" => [
-                    node!("id" => [
+                    node!("name" => [
                         leaf!("f"),
                     ]),
                     node!("args" => []),

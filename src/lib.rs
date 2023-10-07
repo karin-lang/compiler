@@ -3,6 +3,7 @@ use volt::{rule::RuleId, parser::ParserResult};
 
 pub mod hir;
 pub mod syntax;
+pub mod tree;
 #[cfg(test)]
 mod tests;
 

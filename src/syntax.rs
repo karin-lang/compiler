@@ -77,7 +77,7 @@ impl VoltModule for Function {
             function := seq![
                 seq![str("pub"), WHITESPACE()].optional(),
                 str("fn").hide(), WHITESPACE(),
-                Identifier::identifier().expand_once().group("id"), WHITESPACE(),
+                Identifier::identifier().expand_once().group("name"), WHITESPACE(),
                 str("(").hide(), WHITESPACE(),
                 Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
