@@ -24,6 +24,7 @@ const WHITESPACE: fn() -> Element = || Symbol::whitespace().min(0).hide();
 struct Main {
     main: Element,
     item: Element,
+    accessibility: Element,
 }
 
 impl VoltModule for Main {
@@ -31,6 +32,7 @@ impl VoltModule for Main {
         define_rules!{
             main := choice![Main::item().separate_around(WHITESPACE()), WHITESPACE()];
             item := choice![Function::function()];
+            accessibility := str("pub").optional();
         }
     }
 }
@@ -75,7 +77,7 @@ impl VoltModule for Function {
     fn new() -> Function {
         define_rules!{
             function := seq![
-                seq![str("pub"), WHITESPACE()].optional(),
+                seq![Main::accessibility(), WHITESPACE()].optional(),
                 str("fn").hide(), WHITESPACE(),
                 Identifier::identifier().expand_once().group("name"), WHITESPACE(),
                 str("(").hide(), WHITESPACE(),
