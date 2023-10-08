@@ -50,6 +50,16 @@ impl TreeAnalysis {
         HirFormalArgument { name, data_type }
     }
 
+    pub fn expression(&mut self, node: &SyntaxNode) -> HirExpression {
+        let content_node = node.children.get_node(0);
+
+        match content_node.name.as_str() {
+            "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
+            "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
+            _ => unreachable!("unknown expression"),
+        }
+    }
+
     pub fn literal(&mut self, node: &SyntaxNode) -> HirLiteral {
         let content = node.children.get_node(0);
 

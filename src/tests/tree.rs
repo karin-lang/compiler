@@ -125,6 +125,19 @@ speculate!{
         }
     }
 
+    it "expression" {
+        assert_eq!(
+            tree_analysis.expression(
+                node!("Expression::expression" => [
+                    node!("Literal::literal" => [
+                        node!("Literal::boolean" => [leaf!("true")]),
+                    ]),
+                ]).into_node(),
+            ),
+            HirExpression::Literal(HirLiteral::Boolean(true)),
+        );
+    }
+
     describe "literal" {
         it "boolean" {
             assert_eq!(
