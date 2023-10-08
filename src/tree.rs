@@ -38,7 +38,7 @@ impl TreeAnalysis {
     }
 
     pub fn function(&mut self, node: &SyntaxNode) -> HirFunction {
-        let name = self.identifier(&node.children.find_node("name"));
+        let name = self.identifier(&node.children.find_node("Identifier::identifier"));
         let accessibility = self.accessibility(node.children.find_node("Main::accessibility"));
         let arguments = node.children.find_node("args").children.filter_nodes().iter().map(|v| self.formal_argument(v)).collect();
         HirFunction { name, accessibility, arguments }
@@ -68,11 +68,11 @@ impl TreeAnalysis {
                 HirDataType::Primitive(primitive)
             },
             "DataType::generic" => {
-                let name = content.children.find_node("name").children.get_leaf(0).value.clone();
+                let name = content.children.find_node("Identifier::identifier").children.get_leaf(0).value.clone();
                 let argument_nodes = &content.children.find_node("args").children.filter_nodes();
                 let arguments = argument_nodes.iter().map(|data_type_node| {
                     match data_type_node.name.as_str() {
-                        "name" => HirDataType::Identifier(HirUnresolvedIdentifier(data_type_node.children.get_leaf(0).value.clone())),
+                        "Identifier::identifier" => HirDataType::Identifier(HirUnresolvedIdentifier(data_type_node.children.get_leaf(0).value.clone())),
                         "DataType::data_type" => self.data_type(data_type_node),
                         _ => unreachable!("unknown argument format in generic data type"),
                     }

@@ -80,7 +80,7 @@ speculate!{
             expect_success_eq("fn f() {}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("Main::accessibility" => []),
-                    node!("name" => [
+                    node!("Identifier::identifier" => [
                         leaf!("f"),
                     ]),
                     node!("args" => []),
@@ -97,7 +97,7 @@ speculate!{
             expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("Main::accessibility" => []),
-                    node!("name" => [
+                    node!("Identifier::identifier" => [
                         leaf!("f"),
                     ]),
                     node!("args" => [
@@ -131,7 +131,7 @@ speculate!{
             expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("Main::accessibility" => []),
-                    node!("name" => [
+                    node!("Identifier::identifier" => [
                         leaf!("f"),
                     ]),
                     node!("args" => [
@@ -165,7 +165,7 @@ speculate!{
             expect_success_eq("fn f() {0}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("Main::accessibility" => []),
-                    node!("name" => [
+                    node!("Identifier::identifier" => [
                         leaf!("f"),
                     ]),
                     node!("args" => []),
@@ -194,7 +194,7 @@ speculate!{
             expect_success_eq("fn f() {0\n0}", "Function::function", tree!(
                 node!("Function::function" => [
                     node!("Main::accessibility" => []),
-                    node!("name" => [
+                    node!("Identifier::identifier" => [
                         leaf!("f"),
                     ]),
                     node!("args" => []),
@@ -746,23 +746,23 @@ speculate!{
                 expect_success_eq("t<t<T>, T>", "DataType::data_type", tree!(
                     node!("DataType::data_type" => [
                         node!("DataType::generic" => [
-                            node!("name" => [
+                            node!("Identifier::identifier" => [
                                 leaf!("t"),
                             ]),
                             node!("args" => [
                                 node!("DataType::data_type" => [
                                     node!("DataType::generic" => [
-                                        node!("name" => [
+                                        node!("Identifier::identifier" => [
                                             leaf!("t"),
                                         ]),
                                         node!("args" => [
-                                            node!("name" => [
+                                            node!("Identifier::identifier" => [
                                                 leaf!("T"),
                                             ]),
                                         ]),
                                     ]),
                                 ]),
-                                node!("name" => [
+                                node!("Identifier::identifier" => [
                                     leaf!("T"),
                                 ]),
                             ]),

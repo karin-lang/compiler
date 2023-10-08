@@ -79,7 +79,7 @@ impl VoltModule for Function {
             function := seq![
                 seq![Main::accessibility(), WHITESPACE()].optional(),
                 str("fn").hide(), WHITESPACE(),
-                Identifier::identifier().expand_once().group("name"), WHITESPACE(),
+                Identifier::identifier().expand_once().group("Identifier::identifier"), WHITESPACE(),
                 str("(").hide(), WHITESPACE(),
                 Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
@@ -280,9 +280,9 @@ impl VoltModule for DataType {
             // add: types
             primitive_number := choice![str("usize"), str("f32")];
             generic := seq![
-                Identifier::identifier().expand_once().group("name"), WHITESPACE(),
+                Identifier::identifier().expand_once().group("Identifier::identifier"), WHITESPACE(),
                 str("<").hide(), WHITESPACE(),
-                choice![DataType::data_type(), Identifier::identifier().expand_once().group("name")].separate(str(",").separate_around(WHITESPACE()).hide()).group("args"),
+                choice![DataType::data_type(), Identifier::identifier().expand_once().group("Identifier::identifier")].separate(str(",").separate_around(WHITESPACE()).hide()).group("args"),
                 str(">").hide(),
             ];
         }

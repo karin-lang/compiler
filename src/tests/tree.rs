@@ -14,7 +14,7 @@ speculate!{
                     node!("Item::item" => [
                         node!("Function::function" => [
                             node!("Main::accessibility" => []),
-                            node!("name" => [
+                            node!("Identifier::identifier" => [
                                 leaf!("f"),
                             ]),
                             node!("args" => []),
@@ -24,7 +24,7 @@ speculate!{
                     node!("Item::item" => [
                         node!("Function::function" => [
                             node!("Main::accessibility" => []),
-                            node!("name" => [
+                            node!("Identifier::identifier" => [
                                 leaf!("f"),
                             ]),
                             node!("args" => []),
@@ -93,7 +93,7 @@ speculate!{
                 tree_analysis.function(
                     node!("Function::function" => [
                         node!("Main::accessibility" => []),
-                        node!("name" => [
+                        node!("Identifier::identifier" => [
                             leaf!("f"),
                         ]),
                         node!("args" => [
@@ -145,23 +145,23 @@ speculate!{
                     tree_analysis.data_type(
                         node!("DataType::data_type" => [
                             node!("DataType::generic" => [
-                                node!("name" => [
+                                node!("Identifier::identifier" => [
                                     leaf!("t"),
                                 ]),
                                 node!("args" => [
                                     node!("DataType::data_type" => [
                                         node!("DataType::generic" => [
-                                            node!("name" => [
+                                            node!("Identifier::identifier" => [
                                                 leaf!("t"),
                                             ]),
                                             node!("args" => [
-                                                node!("name" => [
+                                                node!("Identifier::identifier" => [
                                                     leaf!("T"),
                                                 ]),
                                             ]),
                                         ]),
                                     ]),
-                                    node!("name" => [
+                                    node!("Identifier::identifier" => [
                                         leaf!("T"),
                                     ]),
                                 ]),
