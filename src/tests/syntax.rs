@@ -101,7 +101,7 @@ speculate!{
                         leaf!("f"),
                     ]),
                     node!("args" => [
-                        node!("Function::argument" => [
+                        node!("Function::formal_argument" => [
                             node!("Identifier::identifier" => [
                                 leaf!("a"),
                             ]),
@@ -111,7 +111,7 @@ speculate!{
                                 ]),
                             ]),
                         ]),
-                        node!("Function::argument" => [
+                        node!("Function::formal_argument" => [
                             node!("Identifier::identifier" => [
                                 leaf!("b"),
                             ]),
@@ -135,7 +135,7 @@ speculate!{
                         leaf!("f"),
                     ]),
                     node!("args" => [
-                        node!("Function::argument" => [
+                        node!("Function::formal_argument" => [
                             node!("Identifier::identifier" => [
                                 leaf!("a"),
                             ]),
@@ -145,7 +145,7 @@ speculate!{
                                 ]),
                             ]),
                         ]),
-                        node!("Function::argument" => [
+                        node!("Function::formal_argument" => [
                             node!("Identifier::identifier" => [
                                 leaf!("b"),
                             ]),

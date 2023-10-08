@@ -70,7 +70,7 @@ impl VoltModule for Identifier {
 #[derive(VoltModuleDefinition)]
 struct Function {
     function: Element,
-    argument: Element,
+    formal_argument: Element,
 }
 
 impl VoltModule for Function {
@@ -81,13 +81,13 @@ impl VoltModule for Function {
                 str("fn").hide(), WHITESPACE(),
                 Identifier::identifier(), WHITESPACE(),
                 str("(").hide(), WHITESPACE(),
-                Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
+                Function::formal_argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
                 str("{").hide(), WHITESPACE(),
                 Expression::expression().separate_around(Symbol::expression_separator().min(0).hide()).optional().group("exprs"), WHITESPACE(),
                 str("}").hide(),
             ];
-            argument := seq![Identifier::identifier(), WHITESPACE(), DataType::data_type()];
+            formal_argument := seq![Identifier::identifier(), WHITESPACE(), DataType::data_type()];
         }
     }
 }

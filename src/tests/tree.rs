@@ -81,7 +81,7 @@ speculate!{
                             leaf!("f"),
                         ]),
                         node!("args" => [
-                            node!("Function::argument" => [
+                            node!("Function::formal_argument" => [
                                 node!("Identifier::identifier" => [
                                     leaf!("a"),
                                 ]),
