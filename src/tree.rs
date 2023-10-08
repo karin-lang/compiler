@@ -39,12 +39,15 @@ impl TreeAnalysis {
 
     pub fn function(&mut self, node: &SyntaxNode) -> HirFunction {
         let name = self.identifier(&node.children.find_node("name"));
-        let accessibility = self.accessibility(&node.children.find_node("Main::accessibility"));
+        let accessibility = self.accessibility(node.children.find_node("Main::accessibility"));
+        let arguments = node.children.find_node("args").children.filter_nodes().iter().map(|v| self.formal_argument(v)).collect();
+        HirFunction { name, accessibility, arguments }
+    }
 
-        HirFunction {
-            name,
-            accessibility,
-        }
+    pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirFormalArgument {
+        let name = self.identifier(node.children.find_node("Identifier::identifier"));
+        let data_type = self.data_type(node.children.find_node("DataType::data_type"));
+        HirFormalArgument { name, data_type }
     }
 
     pub fn identifier(&mut self, node: &SyntaxNode) -> String {

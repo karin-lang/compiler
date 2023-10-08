@@ -22,6 +22,13 @@ pub enum HirAccessibility {
 pub struct HirFunction {
     pub name: String,
     pub accessibility: HirAccessibility,
+    pub arguments: Vec<HirFormalArgument>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirFormalArgument {
+    pub name: String,
+    pub data_type: HirDataType,
 }
 
 #[derive(Clone, Debug, PartialEq)]

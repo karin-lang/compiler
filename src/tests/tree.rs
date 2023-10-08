@@ -39,12 +39,14 @@ speculate!{
                         HirFunction {
                             name: "f".to_string(),
                             accessibility: HirAccessibility::Private,
+                            arguments: Vec::new(),
                         },
                     ),
                     HirItem::Function(
                         HirFunction {
                             name: "f".to_string(),
                             accessibility: HirAccessibility::Private,
+                            arguments: Vec::new(),
                         },
                     ),
                 ],
@@ -94,13 +96,30 @@ speculate!{
                         node!("name" => [
                             leaf!("f"),
                         ]),
-                        node!("args" => []),
+                        node!("args" => [
+                            node!("Function::argument" => [
+                                node!("Identifier::identifier" => [
+                                    leaf!("a"),
+                                ]),
+                                node!("DataType::data_type" => [
+                                    node!("DataType::primitive" => [
+                                        leaf!("usize"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
                         node!("exprs" => []),
                     ]).into_node(),
                 ),
                 HirFunction {
                     name: "f".to_string(),
                     accessibility: HirAccessibility::Private,
+                    arguments: vec![
+                        HirFormalArgument {
+                            name: "a".to_string(),
+                            data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                        },
+                    ],
                 },
             );
         }
