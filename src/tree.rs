@@ -50,6 +50,93 @@ impl TreeAnalysis {
         HirFormalArgument { name, data_type }
     }
 
+    pub fn literal(&mut self, node: &SyntaxNode) -> HirLiteral {
+        let content = node.children.get_node(0);
+
+        match content.name.as_str() {
+            "Literal::boolean" => match content.children.get_leaf(0).value.as_str() {
+                "true" => HirLiteral::Boolean(true),
+                "false" => HirLiteral::Boolean(false),
+                _ => unreachable!("unknown boolean value"),
+            },
+            "Literal::number" => {
+                let float_number_node = content.children.get_node(0);
+
+                if float_number_node.name == "Literal::float_number" {
+                    let data_type = match float_number_node.children.find_node_or_none("DataType::primitive_number") {
+                        Some(v) => Some(self.primitive_data_type(v)),
+                        None => None,
+                    };
+
+                    let integer = float_number_node.children.find_node("integer").children.get_leaf(0).value.clone();
+                    let float = float_number_node.children.find_node("float").children.get_leaf(0).value.clone();
+                    let value = format!("{}.{}", integer, float);
+
+                    HirLiteral::Float(HirFloatLiteral { data_type, value })
+                } else {
+                    let data_type = match content.children.find_node_or_none("DataType::primitive_number") {
+                        Some(v) => Some(self.primitive_data_type(v)),
+                        None => None,
+                    };
+
+                    let value_content = content.children.find_node("value").children.get_node(0);
+
+                    let base = match value_content.name.as_str() {
+                        "Literal::binary_number" => HirIntegerBase::Binary,
+                        "Literal::octal_number" => HirIntegerBase::Octal,
+                        "Literal::decimal_number" => HirIntegerBase::Decimal,
+                        "Literal::hexadecimal_number" => HirIntegerBase::Hexadecimal,
+                        _ => unreachable!("unknown integer base"),
+                    };
+
+                    let value = value_content.children.get_leaf(0).value.clone();
+
+                    let exponent = match content.children.find_node_or_none("Literal::number_exponent") {
+                        Some(exponent_node) => {
+                            let positive = match exponent_node.children.get_leaf(0).value.as_str() {
+                                "+" => true,
+                                "-" => false,
+                                _ => unreachable!("unknown positivity"),
+                            };
+                            let value = exponent_node.children.find_node("value").children.get_leaf(0).value.clone();
+                            Some(HirIntegerExponent { positive, value })
+                        },
+                        None => None,
+                    };
+
+                    HirLiteral::Integer(HirIntegerLiteral { data_type, base, value, exponent })
+                }
+            },
+            /*
+             * choice![
+                    Literal::binary_number(),
+                    Literal::octal_number(),
+                    Literal::hexadecimal_number(),
+                    Literal::decimal_number(),
+                ].group("value"),
+                Literal::number_exponent().optional(),
+                // todo: add float type checker
+                DataType::primitive_number().optional(),
+                
+node!("Literal::number_exponent" => [
+                                leaf!("+"),
+                                node!("value" => [
+                                    leaf!("1"),
+                                ]),
+                            ]),
+
+             * node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::binary_number" => [
+                                    leaf!("10"),
+                                ]),
+                            ]),
+                        ])
+             */
+            _ => unreachable!("unknown literal"),
+        }
+    }
+
     pub fn identifier(&mut self, node: &SyntaxNode) -> String {
         node.children.get_leaf(0).value.clone()
     }
@@ -58,15 +145,7 @@ impl TreeAnalysis {
         let content = node.children.get_node(0);
 
         match content.name.as_str() {
-            "DataType::primitive" => {
-                let primitive = match content.children.get_leaf(0).value.as_str() {
-                    "usize" => HirPrimitiveDataType::Usize,
-                    "f32" => HirPrimitiveDataType::F32,
-                    _ => unreachable!("unknown primitive data type"),
-                };
-
-                HirDataType::Primitive(primitive)
-            },
+            "DataType::primitive" => HirDataType::Primitive(self.primitive_data_type(content)),
             "DataType::generic" => {
                 let name = content.children.find_node("Identifier::identifier").children.get_leaf(0).value.clone();
                 let argument_nodes = &content.children.find_node("args").children.filter_nodes();
@@ -80,6 +159,15 @@ impl TreeAnalysis {
                 HirDataType::Generic(HirGenericDataType { name, arguments })
             },
             _ => unreachable!("unknown data type"),
+        }
+    }
+
+    // Also available to DataType::primitive_number rule.
+    pub fn primitive_data_type(&mut self, node: &SyntaxNode) -> HirPrimitiveDataType {
+        match node.children.get_leaf(0).value.as_str() {
+            "usize" => HirPrimitiveDataType::Usize,
+            "f32" => HirPrimitiveDataType::F32,
+            _ => unreachable!("unknown primitive data type"),
         }
     }
 }

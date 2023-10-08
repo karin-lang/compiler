@@ -125,6 +125,85 @@ speculate!{
         }
     }
 
+    describe "literal" {
+        it "boolean" {
+            assert_eq!(
+                tree_analysis.literal(
+                    node!("Literal::literal" => [
+                        node!("Literal::boolean" => [leaf!("true")]),
+                    ]).into_node(),
+                ),
+                HirLiteral::Boolean(true),
+            );
+        }
+
+        it "integer" {
+            assert_eq!(
+                tree_analysis.literal(
+                    node!("Literal::literal" => [
+                        node!("Literal::number" => [
+                            node!("value" => [
+                                node!("Literal::decimal_number" => [
+                                    leaf!("0"),
+                                ]),
+                            ]),
+                            node!("Literal::number_exponent" => [
+                                leaf!("+"),
+                                node!("value" => [
+                                    leaf!("1"),
+                                ]),
+                            ]),
+                            node!("DataType::primitive_number" => [
+                                leaf!("usize"),
+                            ]),
+                        ]),
+                    ]).into_node(),
+                ),
+                HirLiteral::Integer(
+                    HirIntegerLiteral {
+                        data_type: Some(HirPrimitiveDataType::Usize),
+                        base: HirIntegerBase::Decimal,
+                        value: "0".to_string(),
+                        exponent: Some(
+                            HirIntegerExponent {
+                                positive: true,
+                                value: "1".to_string(),
+                            },
+                        ),
+                    },
+                ),
+            );
+        }
+
+        it "float" {
+            assert_eq!(
+                tree_analysis.literal(
+                    node!("Literal::literal" => [
+                        node!("Literal::number" => [
+                            node!("Literal::float_number" => [
+                                node!("integer" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("float" => [
+                                    leaf!("0"),
+                                ]),
+                                node!("DataType::primitive_number" => [
+                                    leaf!("f32"),
+                                ]),
+                            ]),
+                        ]),
+                    ]).into_node(),
+                ),
+                HirLiteral::Float(
+                    HirFloatLiteral {
+                        data_type: Some(HirPrimitiveDataType::F32),
+                        value: "0.0".to_string(),
+                    },
+                ),
+            );
+        }
+    }
+
     describe "data type" {
         describe "primitive" {
             it "primitive data type" {
