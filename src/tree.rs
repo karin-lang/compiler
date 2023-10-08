@@ -40,8 +40,11 @@ impl TreeAnalysis {
     pub fn function(&mut self, node: &SyntaxNode) -> HirFunction {
         let name = self.identifier(&node.children.find_node("Identifier::identifier"));
         let accessibility = self.accessibility(node.children.find_node("Main::accessibility"));
-        let arguments = node.children.find_node("args").children.filter_nodes().iter().map(|v| self.formal_argument(v)).collect();
-        HirFunction { name, accessibility, arguments }
+        let arguments = node.children.find_node("args").children.filter_nodes().iter()
+            .map(|v| self.formal_argument(v)).collect();
+        let expressions = node.children.find_node("exprs").children.filter_nodes().iter()
+            .map(|v| self.expression(v)).collect();
+        HirFunction { name, accessibility, arguments, expressions }
     }
 
     pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirFormalArgument {

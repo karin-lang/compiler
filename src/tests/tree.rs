@@ -21,16 +21,6 @@ speculate!{
                             node!("exprs" => []),
                         ]),
                     ]),
-                    node!("Item::item" => [
-                        node!("Function::function" => [
-                            node!("Main::accessibility" => []),
-                            node!("Identifier::identifier" => [
-                                leaf!("f"),
-                            ]),
-                            node!("args" => []),
-                            node!("exprs" => []),
-                        ]),
-                    ]),
                 ]).into_node(),
             ),
             Hir {
@@ -40,13 +30,7 @@ speculate!{
                             name: "f".to_string(),
                             accessibility: HirAccessibility::Private,
                             arguments: Vec::new(),
-                        },
-                    ),
-                    HirItem::Function(
-                        HirFunction {
-                            name: "f".to_string(),
-                            accessibility: HirAccessibility::Private,
-                            arguments: Vec::new(),
+                            expressions: Vec::new(),
                         },
                     ),
                 ],
@@ -108,7 +92,13 @@ speculate!{
                                 ]),
                             ]),
                         ]),
-                        node!("exprs" => []),
+                        node!("exprs" => [
+                            node!("Expression::expression" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::boolean" => [leaf!("true")]),
+                                ]),
+                            ]),
+                        ]),
                     ]).into_node(),
                 ),
                 HirFunction {
@@ -119,6 +109,9 @@ speculate!{
                             name: "a".to_string(),
                             data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
                         },
+                    ],
+                    expressions: vec![
+                        HirExpression::Literal(HirLiteral::Boolean(true)),
                     ],
                 },
             );

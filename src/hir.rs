@@ -23,6 +23,7 @@ pub struct HirFunction {
     pub name: String,
     pub accessibility: HirAccessibility,
     pub arguments: Vec<HirFormalArgument>,
+    pub expressions: Vec<HirExpression>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
