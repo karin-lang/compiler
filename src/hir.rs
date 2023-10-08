@@ -9,6 +9,9 @@ pub enum HirItem {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct HirUnresolvedIdentifier(pub String);
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum HirAccessibility {
     Private,
     Public,
@@ -19,4 +22,23 @@ pub enum HirAccessibility {
 pub struct HirFunction {
     pub name: String,
     pub accessibility: HirAccessibility,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirDataType {
+    Primitive(HirPrimitiveDataType),
+    Generic(HirGenericDataType),
+    Identifier(HirUnresolvedIdentifier),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirPrimitiveDataType {
+    Usize,
+    F32,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct HirGenericDataType {
+    pub name: String,
+    pub arguments: Vec<HirDataType>,
 }

@@ -86,7 +86,7 @@ speculate!{
     }
 
     describe "item" {
-        it "hirify function" {
+        it "function" {
             assert_eq!(
                 tree_analysis.function(
                     node!("Function::function" => [
@@ -103,6 +103,68 @@ speculate!{
                     accessibility: HirAccessibility::Private,
                 },
             );
+        }
+    }
+
+    describe "data type" {
+        describe "primitive" {
+            it "primitive data type" {
+                assert_eq!(
+                    tree_analysis.data_type(
+                        node!("DataType::data_type" => [
+                            node!("DataType::primitive" => [
+                                leaf!("usize"),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                );
+            }
+
+            it "generic data type" {
+                assert_eq!(
+                    tree_analysis.data_type(
+                        node!("DataType::data_type" => [
+                            node!("DataType::generic" => [
+                                node!("name" => [
+                                    leaf!("t"),
+                                ]),
+                                node!("args" => [
+                                    node!("DataType::data_type" => [
+                                        node!("DataType::generic" => [
+                                            node!("name" => [
+                                                leaf!("t"),
+                                            ]),
+                                            node!("args" => [
+                                                node!("name" => [
+                                                    leaf!("T"),
+                                                ]),
+                                            ]),
+                                        ]),
+                                    ]),
+                                    node!("name" => [
+                                        leaf!("T"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirDataType::Generic(
+                        HirGenericDataType {
+                            name: "t".to_string(),
+                            arguments: vec![
+                                HirDataType::Generic(
+                                    HirGenericDataType {
+                                        name: "t".to_string(),
+                                        arguments: vec![HirDataType::Identifier(HirUnresolvedIdentifier("T".to_string()))],
+                                    },
+                                ),
+                                HirDataType::Identifier(HirUnresolvedIdentifier("T".to_string())),
+                            ],
+                        },
+                    ),
+                );
+            }
         }
     }
 }

@@ -746,23 +746,23 @@ speculate!{
                 expect_success_eq("t<t<T>, T>", "DataType::data_type", tree!(
                     node!("DataType::data_type" => [
                         node!("DataType::generic" => [
-                            node!("Identifier::identifier" => [
+                            node!("name" => [
                                 leaf!("t"),
                             ]),
                             node!("args" => [
                                 node!("DataType::data_type" => [
                                     node!("DataType::generic" => [
-                                        node!("Identifier::identifier" => [
+                                        node!("name" => [
                                             leaf!("t"),
                                         ]),
                                         node!("args" => [
-                                            node!("Identifier::identifier" => [
+                                            node!("name" => [
                                                 leaf!("T"),
                                             ]),
                                         ]),
                                     ]),
                                 ]),
-                                node!("Identifier::identifier" => [
+                                node!("name" => [
                                     leaf!("T"),
                                 ]),
                             ]),

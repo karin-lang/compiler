@@ -50,4 +50,33 @@ impl TreeAnalysis {
     pub fn identifier(&mut self, node: &SyntaxNode) -> String {
         node.children.get_leaf(0).value.clone()
     }
+
+    pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {
+        let content = node.children.get_node(0);
+
+        match content.name.as_str() {
+            "DataType::primitive" => {
+                let primitive = match content.children.get_leaf(0).value.as_str() {
+                    "usize" => HirPrimitiveDataType::Usize,
+                    "f32" => HirPrimitiveDataType::F32,
+                    _ => unreachable!("unknown primitive data type"),
+                };
+
+                HirDataType::Primitive(primitive)
+            },
+            "DataType::generic" => {
+                let name = content.children.find_node("name").children.get_leaf(0).value.clone();
+                let argument_nodes = &content.children.find_node("args").children.filter_nodes();
+                let arguments = argument_nodes.iter().map(|data_type_node| {
+                    match data_type_node.name.as_str() {
+                        "name" => HirDataType::Identifier(HirUnresolvedIdentifier(data_type_node.children.get_leaf(0).value.clone())),
+                        "DataType::data_type" => self.data_type(data_type_node),
+                        _ => unreachable!("unknown argument format in generic data type"),
+                    }
+                }).collect();
+                HirDataType::Generic(HirGenericDataType { name, arguments })
+            },
+            _ => unreachable!("unknown data type"),
+        }
+    }
 }

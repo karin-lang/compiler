@@ -280,9 +280,9 @@ impl VoltModule for DataType {
             // add: types
             primitive_number := choice![str("usize"), str("f32")];
             generic := seq![
-                Identifier::identifier(), WHITESPACE(),
+                Identifier::identifier().expand_once().group("name"), WHITESPACE(),
                 str("<").hide(), WHITESPACE(),
-                choice![DataType::data_type(), Identifier::identifier()].separate(str(",").separate_around(WHITESPACE()).hide()).group("args"),
+                choice![DataType::data_type(), Identifier::identifier().expand_once().group("name")].separate(str(",").separate_around(WHITESPACE()).hide()).group("args"),
                 str(">").hide(),
             ];
         }
