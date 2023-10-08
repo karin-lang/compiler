@@ -120,32 +120,6 @@ impl TreeAnalysis {
                     HirLiteral::Integer(HirIntegerLiteral { data_type, base, value, exponent })
                 }
             },
-            /*
-             * choice![
-                    Literal::binary_number(),
-                    Literal::octal_number(),
-                    Literal::hexadecimal_number(),
-                    Literal::decimal_number(),
-                ].group("value"),
-                Literal::number_exponent().optional(),
-                // todo: add float type checker
-                DataType::primitive_number().optional(),
-                
-node!("Literal::number_exponent" => [
-                                leaf!("+"),
-                                node!("value" => [
-                                    leaf!("1"),
-                                ]),
-                            ]),
-
-             * node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::binary_number" => [
-                                    leaf!("10"),
-                                ]),
-                            ]),
-                        ])
-             */
             _ => unreachable!("unknown literal"),
         }
     }

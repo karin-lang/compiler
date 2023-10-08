@@ -79,7 +79,7 @@ impl VoltModule for Function {
             function := seq![
                 seq![Main::accessibility(), WHITESPACE()].optional(),
                 str("fn").hide(), WHITESPACE(),
-                Identifier::identifier().expand_once().group("Identifier::identifier"), WHITESPACE(),
+                Identifier::identifier(), WHITESPACE(),
                 str("(").hide(), WHITESPACE(),
                 Function::argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
