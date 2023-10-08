@@ -264,6 +264,22 @@ speculate!{
     }
 
     describe "literal" {
+        describe "boolean" {
+            it "accepts true and false" {
+                expect_success_eq("true", "Literal::boolean", tree!(
+                    node!("Literal::boolean" => [
+                        leaf!("true"),
+                    ])
+                ));
+
+                expect_success_eq("false", "Literal::boolean", tree!(
+                    node!("Literal::boolean" => [
+                        leaf!("false"),
+                    ])
+                ));
+            }
+        }
+
         describe "number" {
             it "accepts data type suffix" {
                 expect_success_eq("0usize", "Literal::number", tree!(
