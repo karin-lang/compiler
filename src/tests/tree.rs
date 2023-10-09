@@ -1,6 +1,7 @@
 use crate::{hir::*, tree::TreeAnalysis};
 use speculate::speculate;
 use volt::{*, tree::*};
+use maplit::hashmap;
 
 speculate!{
     before {
@@ -8,32 +9,37 @@ speculate!{
     }
 
     it "tree" {
-        assert_eq!(
-            tree_analysis.analyze(
-                node!("Main::main" => [
-                    node!("Item::item" => [
-                        node!("Function::function" => [
-                            node!("Main::accessibility" => []),
-                            node!("Identifier::identifier" => [
-                                leaf!("f"),
-                            ]),
-                            node!("args" => []),
-                            node!("exprs" => []),
-                        ]),
+        let child = node!("Main::main" => [
+            node!("Item::item" => [
+                node!("Function::function" => [
+                    node!("Main::accessibility" => []),
+                    node!("Identifier::identifier" => [
+                        leaf!("f"),
                     ]),
-                ]).into_node(),
+                    node!("args" => []),
+                    node!("exprs" => []),
+                ]),
+            ]),
+        ]);
+
+        assert_eq!(
+            tree_analysis.hako(
+                hashmap!{
+                    HirPath::default() => child.into_node(),
+                },
             ),
-            Hir {
-                items: vec![
-                    HirItem::Function(
-                        HirFunction {
-                            name: "f".to_string(),
-                            accessibility: HirAccessibility::Private,
-                            arguments: Vec::new(),
-                            expressions: Vec::new(),
-                        },
+            HirHako {
+                items: hashmap!{
+                    HirPath::new(vec!["f".to_string()]) => (
+                        HirPathItem::Function(
+                            HirFunction {
+                                accessibility: HirAccessibility::Private,
+                                arguments: Vec::new(),
+                                expressions: Vec::new(),
+                            },
+                        )
                     ),
-                ],
+                },
             },
         );
     }
@@ -101,19 +107,23 @@ speculate!{
                         ]),
                     ]).into_node(),
                 ),
-                HirFunction {
-                    name: "f".to_string(),
-                    accessibility: HirAccessibility::Private,
-                    arguments: vec![
-                        HirFormalArgument {
-                            name: "a".to_string(),
-                            data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
-                        },
-                    ],
-                    expressions: vec![
-                        HirExpression::Literal(HirLiteral::Boolean(true)),
-                    ],
-                },
+                (
+                    "f".to_string(),
+                    HirFunction {
+                        accessibility: HirAccessibility::Private,
+                        arguments: vec![
+                            HirIdentifierBinding::new(
+                                "a".to_string(),
+                                HirFormalArgument {
+                                    data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                                },
+                            ),
+                        ],
+                        expressions: vec![
+                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                        ],
+                    },
+                ),
             );
         }
     }
@@ -254,18 +264,22 @@ speculate!{
                         ]).into_node(),
                     ),
                     HirDataType::Generic(
-                        HirGenericDataType {
-                            name: "t".to_string(),
-                            arguments: vec![
-                                HirDataType::Generic(
-                                    HirGenericDataType {
-                                        name: "t".to_string(),
-                                        arguments: vec![HirDataType::Identifier(HirUnresolvedIdentifier("T".to_string()))],
-                                    },
-                                ),
-                                HirDataType::Identifier(HirUnresolvedIdentifier("T".to_string())),
-                            ],
-                        },
+                        HirIdentifierBinding::new(
+                            "t".to_string(),
+                            HirGenericDataType {
+                                arguments: vec![
+                                    HirDataType::Generic(
+                                        HirIdentifierBinding::new(
+                                            "t".to_string(),
+                                            HirGenericDataType {
+                                                arguments: vec![HirDataType::Identifier(HirPath::new(vec!["T".to_string()]))],
+                                            },
+                                        ),
+                                    ),
+                                    HirDataType::Identifier(HirPath::new(vec!["T".to_string()])),
+                                ],
+                            },
+                        ),
                     ),
                 );
             }

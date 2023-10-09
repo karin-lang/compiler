@@ -1,15 +1,50 @@
+use std::collections::HashMap;
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct HirPath(Vec<String>);
+
+impl Default for HirPath {
+    fn default() -> Self {
+        HirPath(Vec::new())
+    }
+}
+
+impl HirPath {
+    pub fn new(value: Vec<String>) -> HirPath {
+        HirPath(value)
+    }
+
+    pub fn append_clone(&self, path: String) -> HirPath {
+        let mut cloned = self.0.clone();
+        cloned.push(path);
+        HirPath(cloned)
+    }
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub struct HirIdentifierBinding<T>(String, T);
+
+impl<T> HirIdentifierBinding<T> {
+    pub fn new(id: String, data: T) -> HirIdentifierBinding<T> {
+        HirIdentifierBinding(id, data)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Hir {
-    pub items: Vec<HirItem>,
+    pub hakos: HashMap<String, HirHako>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum HirItem {
+pub struct HirHako {
+    pub items: HashMap<HirPath, HirPathItem>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirPathItem {
+    Module,
     Function(HirFunction),
 }
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirUnresolvedIdentifier(pub String);
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirAccessibility {
@@ -20,15 +55,13 @@ pub enum HirAccessibility {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFunction {
-    pub name: String,
     pub accessibility: HirAccessibility,
-    pub arguments: Vec<HirFormalArgument>,
+    pub arguments: Vec<HirIdentifierBinding<HirFormalArgument>>,
     pub expressions: Vec<HirExpression>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFormalArgument {
-    pub name: String,
     pub data_type: HirDataType,
 }
 
@@ -76,8 +109,8 @@ pub struct HirFloatLiteral {
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirDataType {
     Primitive(HirPrimitiveDataType),
-    Generic(HirGenericDataType),
-    Identifier(HirUnresolvedIdentifier),
+    Generic(HirIdentifierBinding<HirGenericDataType>),
+    Identifier(HirPath),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -88,6 +121,5 @@ pub enum HirPrimitiveDataType {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirGenericDataType {
-    pub name: String,
     pub arguments: Vec<HirDataType>,
 }

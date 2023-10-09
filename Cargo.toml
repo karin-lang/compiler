@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 colored = "2.0.4"
+maplit = "1.0.2"
 speculate = "0.1.2"
 volt = { path = "../../volt-parser/volt-rs" }
 volt-derive = { path = "../../volt-parser/volt-rs-derive" }
