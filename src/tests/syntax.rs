@@ -251,6 +251,18 @@ speculate!{
         it "rejects numeric start" {
             expect_unmatch_failure("0", "Identifier::identifier");
         }
+
+        it "rejects reserved keywords" {
+            expect_unmatch_failure("fn", "Identifier::identifier");
+        }
+
+        it "accepts characters after reserved keyword" {
+            expect_success_eq("fn_", "Identifier::identifier", tree!(
+                node!("Identifier::identifier" => [
+                    leaf!("fn_"),
+                ])
+            ));
+        }
     }
 
     describe "symbol" {

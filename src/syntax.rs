@@ -57,12 +57,19 @@ impl VoltModule for Symbol {
 #[derive(VoltModuleDefinition)]
 struct Identifier {
     identifier: Element,
+    reserved: Element,
 }
 
 impl VoltModule for Identifier {
     fn new() -> Identifier {
         define_rules!{
-            identifier := seq![chars(r"a-zA-Z_"), chars(r"a-zA-Z\d_").min(0)].join();
+            identifier := choice![
+                // identifier which is not reserved keyword like "id"
+                seq![Identifier::reserved().neglook(), seq![chars(r"a-zA-Z_"), chars(r"a-zA-Z\d_").min(0)].join()],
+                // reserved keyword which is followed by characters like "public" (not "pub")
+                seq![Identifier::reserved(), chars(r"a-zA-Z\d_").min(1)].join(),
+            ];
+            reserved := choice![str("fn"), str("hako"), str("pub"), DataType::primitive(), Literal::boolean()];
         }
     }
 }
