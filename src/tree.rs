@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use volt::tree::*;
-use crate::hir::*;
+use crate::_hir::*;
 
 pub struct TreeAnalysis;
 
