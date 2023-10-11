@@ -1,49 +1,43 @@
-use std::collections::HashMap;
+pub mod expr;
+pub mod item;
+pub mod path;
 
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct HirPath(Vec<String>);
-
-impl Default for HirPath {
-    fn default() -> Self {
-        HirPath(Vec::new())
-    }
-}
-
-impl HirPath {
-    pub fn new(value: Vec<String>) -> HirPath {
-        HirPath(value)
-    }
-
-    pub fn append_clone(&self, path: String) -> HirPath {
-        let mut cloned = self.0.clone();
-        cloned.push(path);
-        HirPath(cloned)
-    }
-}
-
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct HirIdentifierBinding<T>(String, T);
-
-impl<T> HirIdentifierBinding<T> {
-    pub fn new(id: String, data: T) -> HirIdentifierBinding<T> {
-        HirIdentifierBinding(id, data)
-    }
-}
+use self::{item::*, path::*};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Hir {
-    pub hakos: HashMap<String, HirHako>,
+    pub path_tree: HirPathTree,
+    pub items: Vec<HirItem>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct HirHako {
-    pub items: HashMap<HirPath, HirPathItem>,
+pub struct HirIdentifier(String);
+
+impl From<&str> for HirIdentifier {
+    fn from(value: &str) -> Self {
+        HirIdentifier(value.to_string())
+    }
+}
+
+impl From<String> for HirIdentifier {
+    fn from(value: String) -> Self {
+        HirIdentifier(value)
+    }
+}
+
+impl From<HirIdentifier> for String {
+    fn from(value: HirIdentifier) -> Self {
+        value.0.clone()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum HirPathItem {
-    Module,
-    Function(HirFunction),
+pub struct HirIdentifierBinding<T>(HirIdentifier, T);
+
+impl<T> HirIdentifierBinding<T> {
+    pub fn new(id: HirIdentifier, value: T) -> HirIdentifierBinding<T> {
+        HirIdentifierBinding(id, value)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -54,72 +48,7 @@ pub enum HirAccessibility {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct HirFunction {
-    pub accessibility: HirAccessibility,
-    pub arguments: Vec<HirIdentifierBinding<HirFormalArgument>>,
-    pub expressions: Vec<HirExpression>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirFormalArgument {
-    pub data_type: HirDataType,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirExpression {
-    Literal(HirLiteral),
-    DataType(HirDataType),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirLiteral {
-    Boolean(bool),
-    Integer(HirIntegerLiteral),
-    Float(HirFloatLiteral),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirIntegerBase {
-    Binary,
-    Octal,
-    Decimal,
-    Hexadecimal,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirIntegerLiteral {
-    pub data_type: Option<HirPrimitiveDataType>,
-    pub base: HirIntegerBase,
-    pub value: String,
-    pub exponent: Option<HirIntegerExponent>,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirIntegerExponent {
-    pub positive: bool,
-    pub value: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirFloatLiteral {
-    pub data_type: Option<HirPrimitiveDataType>,
-    pub value: String,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirDataType {
-    Primitive(HirPrimitiveDataType),
-    Generic(HirIdentifierBinding<HirGenericDataType>),
-    Identifier(HirPath),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirPrimitiveDataType {
-    Usize,
-    F32,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub struct HirGenericDataType {
-    pub arguments: Vec<HirDataType>,
+pub enum HirMutability {
+    Immutable,
+    Mutable,
 }

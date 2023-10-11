@@ -1,24 +1,88 @@
-use std::collections::HashMap;
 use volt::tree::*;
-use crate::_hir::*;
+use crate::hir::{*, expr::*, item::*, path::*};
 
-pub struct TreeAnalysis;
+#[derive(Clone, Debug, PartialEq)]
+pub struct AstHako<'a> {
+    pub id: String,
+    pub modules: Vec<AstModule<'a>>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct AstModule<'a> {
+    pub id: String,
+    pub node: &'a SyntaxNode,
+    pub submodules: Vec<AstModule<'a>>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct TreeAnalysis {
+    path_index_generator: HirPathIndexGenerator,
+    pub(crate) path_tree: HirPathTree,
+    pub(crate) items: Vec<HirItem>,
+}
 
 impl TreeAnalysis {
-    // pub fn analyze(&mut self, nodes: HashMap<String, &SyntaxNode>) -> Hir;
+    pub fn new() -> TreeAnalysis {
+        TreeAnalysis {
+            path_index_generator: HirPathIndexGenerator::new(),
+            path_tree: HirPathTree::new(),
+            items: Vec::new(),
+        }
+    }
 
-    pub fn hako(&mut self, module_nodes: HashMap<HirPath, &SyntaxNode>) -> HirHako {
-        let mut items = HashMap::new();
+    pub fn analyze(hakos: Vec<&AstHako>) -> Hir {
+        let mut analyzer = TreeAnalysis::new();
 
-        for(each_module_path, each_module_node) in &module_nodes {
-            for each_node in each_module_node.children.filter_nodes() {
-                let (new_item_id, new_item) = self.item(each_node);
-                let new_item_path = each_module_path.append_clone(new_item_id);
-                items.insert(new_item_path, new_item);
-            }
+        for each_hako in &hakos {
+            analyzer.hako(each_hako);
         }
 
-        HirHako { items }
+        Hir {
+            path_tree: analyzer.path_tree,
+            items: analyzer.items,
+        }
+    }
+
+    pub fn hako(&mut self, hako: &AstHako) {
+        let path_index = self.path_index_generator.generate();
+        let mut child_items = Vec::new();
+        let mut child_path_indexes = Vec::new();
+
+        for each_module in &hako.modules {
+            for each_item_node in &each_module.node.children.get_node(0).children.filter_nodes() {
+                child_items.push(self.item(each_item_node));
+            }
+
+            child_path_indexes.push(self.module(each_module, path_index));
+        }
+
+        let path_node = HirPathNode {
+            id: hako.id.clone(),
+            kind: HirPathKind::Hako,
+            parent: None,
+            children: child_path_indexes,
+        };
+
+        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node, true);
+    }
+
+    pub fn module(&mut self, module: &AstModule, parent: HirPathIndex) -> HirPathIndex {
+        let path_index = self.path_index_generator.generate();
+        let child_path_indexes = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
+
+        let path_node = HirPathNode {
+            id: module.id.clone(),
+            kind: HirPathKind::Module,
+            parent: Some(parent),
+            children: child_path_indexes,
+        };
+
+        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node, false);
+        path_index
+    }
+
+    pub fn identifier(&mut self, node: &SyntaxNode) -> String {
+        node.children.get_leaf(0).value.clone()
     }
 
     pub fn accessibility(&mut self, node: &SyntaxNode) -> HirAccessibility {
@@ -33,13 +97,13 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn item(&mut self, node: &SyntaxNode) -> (String, HirPathItem) {
+    pub fn item(&mut self, node: &SyntaxNode) -> (String, HirItem) {
         let content = node.children.get_node(0);
 
         match content.name.as_str() {
             "Function::function" => {
                 let (id, function) = self.function(content);
-                (id, HirPathItem::Function(function))
+                (id, HirItem::Function(function))
             },
             _ => unreachable!("unknown item content name"),
         }
@@ -61,7 +125,15 @@ impl TreeAnalysis {
     pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirIdentifierBinding<HirFormalArgument> {
         let id = self.identifier(node.children.find_node("Identifier::identifier"));
         let data_type = self.data_type(node.children.find_node("DataType::data_type"));
-        HirIdentifierBinding::new(id, HirFormalArgument { data_type })
+
+        HirIdentifierBinding::new(
+            id.into(),
+            HirFormalArgument {
+                // todo: 構文ノードのmutabilityを反映させる
+                mutability: HirMutability::Immutable,
+                data_type,
+            },
+        )
     }
 
     pub fn expression(&mut self, node: &SyntaxNode) -> HirExpression {
@@ -135,10 +207,6 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn identifier(&mut self, node: &SyntaxNode) -> String {
-        node.children.get_leaf(0).value.clone()
-    }
-
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {
         let content = node.children.get_node(0);
 
@@ -150,12 +218,12 @@ impl TreeAnalysis {
                 let arguments = argument_nodes.iter().map(|data_type_node| {
                     match data_type_node.name.as_str() {
                         // fix: replace identifier to path
-                        "Identifier::identifier" => HirDataType::Identifier(HirPath::new(vec![data_type_node.children.get_leaf(0).value.clone()])),
+                        "Identifier::identifier" => HirDataType::Identifier(data_type_node.children.get_leaf(0).value.clone().into()),
                         "DataType::data_type" => self.data_type(data_type_node),
                         _ => unreachable!("unknown argument format in generic data type"),
                     }
                 }).collect();
-                HirDataType::Generic(HirIdentifierBinding::new(id, HirGenericDataType { arguments }))
+                HirDataType::Generic(HirIdentifierBinding::new(id.into(), HirGenericDataType { arguments }))
             },
             _ => unreachable!("unknown data type"),
         }

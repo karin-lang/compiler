@@ -1,53 +1,89 @@
-use crate::{hir::*, tree::TreeAnalysis};
+use std::collections::BTreeMap;
+use crate::{hir::{*, expr::*, item::*, path::*}, tree::*};
 use speculate::speculate;
 use volt::{*, tree::*};
-use maplit::hashmap;
 
 speculate!{
     before {
-        let mut tree_analysis = TreeAnalysis;
+        let new_analyzer = || TreeAnalysis::new();
     }
 
     it "tree" {
-        let child = node!("Main::main" => [
-            node!("Item::item" => [
-                node!("Function::function" => [
-                    node!("Main::accessibility" => []),
-                    node!("Identifier::identifier" => [
-                        leaf!("f"),
-                    ]),
-                    node!("args" => []),
-                    node!("exprs" => []),
-                ]),
-            ]),
-        ]);
+        let mut analyzer = new_analyzer();
 
-        assert_eq!(
-            tree_analysis.hako(
-                hashmap!{
-                    HirPath::default() => child.into_node(),
-                },
-            ),
-            HirHako {
-                items: hashmap!{
-                    HirPath::new(vec!["f".to_string()]) => (
-                        HirPathItem::Function(
-                            HirFunction {
-                                accessibility: HirAccessibility::Private,
-                                arguments: Vec::new(),
-                                expressions: Vec::new(),
-                            },
-                        )
-                    ),
-                },
+        analyzer.hako(
+            &AstHako {
+                id: "h".to_string(),
+                modules: Vec::new(),
             },
         );
+
+        assert_eq!(
+            analyzer.path_tree,
+            HirPathTree {
+                hako_indexes: vec![
+                    HirPathIndex::from(0),
+                ],
+                nodes: BTreeMap::from([
+                    (
+                        HirPathIndex::from(0),
+                        HirPathNode {
+                            id: "h".to_string(),
+                            kind: HirPathKind::Hako,
+                            parent: None,
+                            children: Vec::new(),
+                        },
+                    ),
+                ]),
+            },
+        );
+
+        assert_eq!(analyzer.items, Vec::new());
+    }
+
+    describe "module" {
+        it "no children" {
+            let syntax_child = node!("Main::main" => []);
+            let mut analyzer = new_analyzer();
+
+            analyzer.module(
+                &AstModule {
+                    id: "m".to_string(),
+                    node: syntax_child.into_node(),
+                    submodules: Vec::new(),
+                },
+                HirPathIndex::from(100),
+            );
+
+            assert_eq!(
+                analyzer.path_tree,
+                HirPathTree {
+                    hako_indexes: vec![],
+                    nodes: BTreeMap::from([
+                        (
+                            HirPathIndex::from(0),
+                            HirPathNode {
+                                id: "m".to_string(),
+                                kind: HirPathKind::Module,
+                                parent: Some(HirPathIndex::from(100)),
+                                children: Vec::new(),
+                            },
+                        )
+                    ]),
+                },
+            );
+
+            assert_eq!(
+                analyzer.items,
+                Vec::new(),
+            );
+        }
     }
 
     describe "accessibility" {
         it "private" {
             assert_eq!(
-                tree_analysis.accessibility(
+                new_analyzer().accessibility(
                     node!("Main::accessibility" => []).into_node(),
                 ),
                 HirAccessibility::Private,
@@ -56,7 +92,7 @@ speculate!{
 
         it "public" {
             assert_eq!(
-                tree_analysis.accessibility(
+                new_analyzer().accessibility(
                     node!("Main::accessibility" => [
                         leaf!("pub"),
                     ]).into_node(),
@@ -67,7 +103,7 @@ speculate!{
 
         it "public in hako" {
             assert_eq!(
-                tree_analysis.accessibility(
+                new_analyzer().accessibility(
                     node!("Main::accessibility" => [
                         leaf!("pub@hako"),
                     ]).into_node(),
@@ -80,7 +116,7 @@ speculate!{
     describe "item" {
         it "function" {
             assert_eq!(
-                tree_analysis.function(
+                new_analyzer().function(
                     node!("Function::function" => [
                         node!("Main::accessibility" => []),
                         node!("Identifier::identifier" => [
@@ -113,8 +149,9 @@ speculate!{
                         accessibility: HirAccessibility::Private,
                         arguments: vec![
                             HirIdentifierBinding::new(
-                                "a".to_string(),
+                                "a".into(),
                                 HirFormalArgument {
+                                    mutability: HirMutability::Immutable,
                                     data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
                                 },
                             ),
@@ -130,7 +167,7 @@ speculate!{
 
     it "expression" {
         assert_eq!(
-            tree_analysis.expression(
+            new_analyzer().expression(
                 node!("Expression::expression" => [
                     node!("Literal::literal" => [
                         node!("Literal::boolean" => [leaf!("true")]),
@@ -144,7 +181,7 @@ speculate!{
     describe "literal" {
         it "boolean" {
             assert_eq!(
-                tree_analysis.literal(
+                new_analyzer().literal(
                     node!("Literal::literal" => [
                         node!("Literal::boolean" => [leaf!("true")]),
                     ]).into_node(),
@@ -155,7 +192,7 @@ speculate!{
 
         it "integer" {
             assert_eq!(
-                tree_analysis.literal(
+                new_analyzer().literal(
                     node!("Literal::literal" => [
                         node!("Literal::number" => [
                             node!("value" => [
@@ -193,7 +230,7 @@ speculate!{
 
         it "float" {
             assert_eq!(
-                tree_analysis.literal(
+                new_analyzer().literal(
                     node!("Literal::literal" => [
                         node!("Literal::number" => [
                             node!("Literal::float_number" => [
@@ -224,7 +261,7 @@ speculate!{
         describe "primitive" {
             it "primitive data type" {
                 assert_eq!(
-                    tree_analysis.data_type(
+                    new_analyzer().data_type(
                         node!("DataType::data_type" => [
                             node!("DataType::primitive" => [
                                 leaf!("usize"),
@@ -237,7 +274,7 @@ speculate!{
 
             it "generic data type" {
                 assert_eq!(
-                    tree_analysis.data_type(
+                    new_analyzer().data_type(
                         node!("DataType::data_type" => [
                             node!("DataType::generic" => [
                                 node!("Identifier::identifier" => [
@@ -265,18 +302,20 @@ speculate!{
                     ),
                     HirDataType::Generic(
                         HirIdentifierBinding::new(
-                            "t".to_string(),
+                            "t".into(),
                             HirGenericDataType {
                                 arguments: vec![
                                     HirDataType::Generic(
                                         HirIdentifierBinding::new(
-                                            "t".to_string(),
+                                            "t".into(),
                                             HirGenericDataType {
-                                                arguments: vec![HirDataType::Identifier(HirPath::new(vec!["T".to_string()]))],
+                                                arguments: vec![
+                                                    HirDataType::Identifier("T".into()),
+                                                ],
                                             },
                                         ),
                                     ),
-                                    HirDataType::Identifier(HirPath::new(vec!["T".to_string()])),
+                                    HirDataType::Identifier("T".into()),
                                 ],
                             },
                         ),

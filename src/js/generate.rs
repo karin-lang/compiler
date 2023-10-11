@@ -1,4 +1,4 @@
-use crate::_hir::*;
+use crate::hir::*;
 use super::ir::*;
 
 pub struct JsCodeGenerator;
