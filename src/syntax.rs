@@ -13,6 +13,7 @@ impl Syntax {
         volt.add_module(Function::new());
         volt.add_module(Expression::new());
         volt.add_module(Literal::new());
+        volt.add_module(Operation::new());
         volt.add_module(DataType::new());
         volt
     }
@@ -102,12 +103,15 @@ impl VoltModule for Function {
 #[derive(VoltModuleDefinition)]
 struct Expression {
     expression: Element,
+    operation_term: Element,
 }
 
 impl VoltModule for Expression {
     fn new() -> Self {
         define_rules!{
-            expression := choice![
+            // todo: add reducer
+            expression := Operation::operation();
+            operation_term := choice![
                 Literal::literal(),
                 DataType::data_type(),
             ];
@@ -267,6 +271,72 @@ impl VoltModule for Literal {
                 DataType::primitive_number().optional(),
             ];
             float_number_value := choice![chars("0-9"), str("_")].min(1).join().reduce(float_reducer);
+        }
+    }
+}
+
+#[derive(VoltModuleDefinition)]
+struct Operation {
+    operation: Element,
+    priority3: Element,
+    priority2: Element,
+    priority1: Element,
+    path_resolution: Element,
+}
+
+impl VoltModule for Operation {
+    fn new() -> Self {
+        let term_optimization_reducer = |mut children: Vec<SyntaxChild>| {
+            let expose = {
+                if children.len() == 1 {
+                    if let Some(SyntaxChild::Node(node)) = children.get(0) {
+                        node.children.len() == 1
+                    } else {
+                        false
+                    }
+                } else {
+                    unreachable!("not compatible with term optimization reducer");
+                }
+            };
+
+            if expose {
+                if let SyntaxChild::Node(mut node) = children.pop().unwrap() {
+                    vec![node.children.pop().unwrap()]
+                } else {
+                    unreachable!();
+                }
+            } else {
+                children
+            }
+        };
+
+        define_rules!{
+            operation := Operation::priority3().expand_once();
+            priority3 := choice![
+                seq![
+                    Operation::priority2().reduce(term_optimization_reducer), WHITESPACE(),
+                    choice![str("+"), str("-")], WHITESPACE(),
+                    Operation::priority3().reduce(term_optimization_reducer),
+                ],
+                Operation::priority2().expand_once(),
+            ];
+            priority2 := choice![
+                seq![
+                    Operation::priority1().reduce(term_optimization_reducer), WHITESPACE(),
+                    choice![str("*"), str("/")], WHITESPACE(),
+                    Operation::priority2().reduce(term_optimization_reducer),
+                ],
+                Operation::priority1().expand_once(),
+            ];
+            priority1 := choice![
+                seq![
+                    Expression::operation_term(), WHITESPACE(),
+                    str("."), WHITESPACE(),
+                    Operation::priority1().reduce(term_optimization_reducer),
+                ],
+                Expression::operation_term(),
+            ];
+            path_resolution := seq![str("::").hide().separate(Expression::expression().around(WHITESPACE())).hide()];
         }
     }
 }
