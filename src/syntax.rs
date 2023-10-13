@@ -301,10 +301,11 @@ impl VoltModule for Literal {
 #[derive(VoltModuleDefinition)]
 struct Operation {
     operation: Element,
-    priority3: Element,
-    priority2: Element,
-    priority1: Element,
+    arithmetic1: Element,
+    arithmetic2: Element,
+    postfix: Element,
     path_resolution: Element,
+    grouping: Element,
 }
 
 impl VoltModule for Operation {
@@ -333,33 +334,49 @@ impl VoltModule for Operation {
             }
         };
 
+        // Don't hide operators to distinguish them and recognize exposed element in expression reducer.
         define_rules!{
-            operation := Operation::priority3().expand_once();
-            priority3 := choice![
+            operation := Operation::arithmetic1().expand_once();
+            arithmetic1 := choice![
                 seq![
-                    Operation::priority2().reduce(term_optimization_reducer), WHITESPACE(),
+                    Operation::arithmetic2().reduce(term_optimization_reducer), WHITESPACE(),
                     choice![str("+"), str("-")], WHITESPACE(),
-                    Operation::priority3().reduce(term_optimization_reducer),
+                    Operation::arithmetic1().reduce(term_optimization_reducer),
                 ],
-                Operation::priority2().expand_once(),
+                Operation::arithmetic2().expand_once(),
             ];
-            priority2 := choice![
+            arithmetic2 := choice![
                 seq![
-                    Operation::priority1().reduce(term_optimization_reducer), WHITESPACE(),
+                    Operation::postfix().reduce(term_optimization_reducer), WHITESPACE(),
                     choice![str("*"), str("/")], WHITESPACE(),
-                    Operation::priority2().reduce(term_optimization_reducer),
+                    Operation::arithmetic2().reduce(term_optimization_reducer),
                 ],
-                Operation::priority1().expand_once(),
+                Operation::postfix().expand_once(),
             ];
-            priority1 := choice![
+            postfix := choice![
                 seq![
-                    Expression::operation_term(), WHITESPACE(),
+                    Operation::path_resolution(), WHITESPACE(),
                     str("."), WHITESPACE(),
-                    Operation::priority1().reduce(term_optimization_reducer),
+                    Operation::postfix().reduce(term_optimization_reducer),
+                ],
+                Operation::path_resolution().expand_once(),
+            ];
+            path_resolution := choice![
+                seq![
+                    Operation::grouping(), WHITESPACE(),
+                    str("::"), WHITESPACE(),
+                    Operation::path_resolution().reduce(term_optimization_reducer),
+                ],
+                Operation::grouping().expand_once(),
+            ];
+            grouping := choice![
+                seq![
+                    str("("), WHITESPACE(),
+                    Expression::operation_term(), WHITESPACE(),
+                    str(")"),
                 ],
                 Expression::operation_term(),
             ];
-            path_resolution := seq![str("::").hide().separate(Expression::expression().around(WHITESPACE())).hide()];
         }
     }
 }

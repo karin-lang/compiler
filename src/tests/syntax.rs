@@ -759,7 +759,7 @@ speculate!{
     }
 
     describe "operation" {
-        it "priority" {
+        it "same priority" {
             expect_success_eq("0 + 1", "Operation::operation", tree!(
                 node!("Operation::operation" => [
                     node!("Expression::operation_term" => [
@@ -787,7 +787,9 @@ speculate!{
                     ]),
                 ])
             ));
+        }
 
+        it "difference priority 1" {
             expect_success_eq("0 + 1 * 2", "Operation::operation", tree!(
                 node!("Operation::operation" => [
                     node!("Expression::operation_term" => [
@@ -802,7 +804,7 @@ speculate!{
                         ]),
                     ]),
                     leaf!("+"),
-                    node!("Operation::priority3" => [
+                    node!("Operation::arithmetic1" => [
                         node!("Expression::operation_term" => [
                             node!("Literal::literal" => [
                                 node!("Literal::number" => [
@@ -829,10 +831,12 @@ speculate!{
                     ]),
                 ])
             ));
+        }
 
+        it "different priority 2" {
             expect_success_eq("0 * 1 + 2", "Operation::operation", tree!(
                 node!("Operation::operation" => [
-                    node!("Operation::priority2" => [
+                    node!("Operation::arithmetic2" => [
                         node!("Expression::operation_term" => [
                             node!("Literal::literal" => [
                                 node!("Literal::number" => [
