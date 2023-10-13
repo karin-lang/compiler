@@ -108,9 +108,32 @@ struct Expression {
 
 impl VoltModule for Expression {
     fn new() -> Self {
+        let expression_reducer = |mut children: Vec<SyntaxChild>| {
+            let expose = {
+                if let Some(operation_node) = children.get_node_or_none(0) {
+                    operation_node.children.len() == 1
+                } else {
+                    false
+                }
+            };
+
+            if expose {
+                if let SyntaxChild::Node(mut node) = children.pop().unwrap() {
+                    if let SyntaxChild::Node(mut node) = node.children.pop().unwrap() {
+                        vec![node.children.pop().unwrap()]
+                    } else {
+                        unreachable!();
+                    }
+                } else {
+                    unreachable!();
+                }
+            } else {
+                children
+            }
+        };
+
         define_rules!{
-            // todo: add reducer
-            expression := Operation::operation();
+            expression := Operation::operation().reduce(expression_reducer);
             operation_term := choice![
                 Literal::literal(),
                 DataType::data_type(),
