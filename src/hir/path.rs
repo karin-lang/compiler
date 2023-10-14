@@ -1,5 +1,7 @@
 use std::collections::BTreeMap;
 
+use super::expr::HirExpression;
+
 // fix
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct HirPathIndex(usize);
@@ -78,4 +80,11 @@ pub enum HirPathKind {
     Struct,
     Enum,
     Trait,
+}
+
+// todo: 活用する?
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirPath {
+    Resolved(HirPathIndex),
+    Unresolved(Vec<HirExpression>),
 }

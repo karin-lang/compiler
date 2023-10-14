@@ -137,6 +137,7 @@ impl VoltModule for Expression {
             operation_term := choice![
                 Literal::literal(),
                 DataType::data_type(),
+                Identifier::identifier(),
             ];
         }
     }
@@ -355,7 +356,7 @@ impl VoltModule for Operation {
             ];
             postfix := choice![
                 seq![
-                    Operation::path_resolution(), WHITESPACE(),
+                    Operation::path_resolution().reduce(term_optimization_reducer), WHITESPACE(),
                     str("."), WHITESPACE(),
                     Operation::postfix().reduce(term_optimization_reducer),
                 ],
@@ -363,7 +364,7 @@ impl VoltModule for Operation {
             ];
             path_resolution := choice![
                 seq![
-                    Operation::grouping(), WHITESPACE(),
+                    Operation::grouping().reduce(term_optimization_reducer), WHITESPACE(),
                     str("::"), WHITESPACE(),
                     Operation::path_resolution().reduce(term_optimization_reducer),
                 ],

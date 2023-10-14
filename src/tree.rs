@@ -141,7 +141,9 @@ impl TreeAnalysis {
 
         match content_node.name.as_str() {
             "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
+            "Operation::operation" => HirExpression::Operation(Box::new(self.operation(content_node))),
             "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
+            "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node)),
             _ => unreachable!("unknown expression"),
         }
     }
@@ -205,6 +207,75 @@ impl TreeAnalysis {
             },
             _ => unreachable!("unknown literal"),
         }
+    }
+
+    pub fn operation(&mut self, node: &SyntaxNode) -> HirOperation {
+        let elements = &node.children;
+
+        let mut get_term = |elements: &Vec<SyntaxChild>, index: usize| -> HirExpression {
+            let target = elements.get_node(index);
+
+            if target.name == "Expression::operation_term" {
+                self.expression(target)
+            } else {
+                HirExpression::Operation(Box::new(self.operation(target)))
+            }
+        };
+
+        // prefix and grouping operators
+        if let Some(first_leaf) = elements.get_leaf_or_none(0) {
+            // todo: add more operators
+            match first_leaf.value.as_str() {
+                "(" => return HirOperation::Group(get_term(elements, 1)),
+                _ => (),
+            }
+        }
+
+        // infix operators
+        if let Some(second_leaf) = elements.get_leaf_or_none(1) {
+            match second_leaf.value.as_str() {
+                "+" => return HirOperation::Addition(
+                    get_term(elements, 0),
+                    get_term(elements, 2),
+                ),
+                "*" => return HirOperation::Multiplication(
+                    get_term(elements, 0),
+                    get_term(elements, 2),
+                ),
+                "." => return HirOperation::MemberAccess(
+                    get_term(elements, 0),
+                    get_term(elements, 2),
+                ),
+                "::" => {
+                    let left = get_term(elements, 0);
+                    let right = get_term(elements, 2);
+
+                    // todo: reject expression grouping
+                    match left {
+                        left @ (HirExpression::DataType(_) | HirExpression::Identifier(_)) => {
+                            let mut segments = vec![left];
+
+                            match &right {
+                                HirExpression::Operation(operation) => match &**operation {
+                                    HirOperation::Path(path) => match &*path {
+                                        HirPath::Resolved(_) => unreachable!(),
+                                        HirPath::Unresolved(right_segments) => segments.append(&mut right_segments.clone()),
+                                    },
+                                    _ => segments.push(right),
+                                },
+                                _ => segments.push(right),
+                            }
+
+                            return HirOperation::Path(HirPath::Unresolved(segments));
+                        },
+                        _ => unimplemented!("error handling is not implemented"),
+                    }
+                },
+                _ => (),
+            }
+        }
+
+        unreachable!("unknown operator");
     }
 
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {

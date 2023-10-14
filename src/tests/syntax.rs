@@ -759,7 +759,47 @@ speculate!{
     }
 
     describe "operation" {
-        it "same priority" {
+        it "path resolution" {
+            expect_success_eq("a::b::c", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    node!("Expression::operation_term" => [
+                        node!("Identifier::identifier" => [leaf!("a")]),
+                    ]),
+                    leaf!("::"),
+                    node!("Operation::path_resolution" => [
+                        node!("Expression::operation_term" => [
+                            node!("Identifier::identifier" => [leaf!("b")]),
+                        ]),
+                        leaf!("::"),
+                        node!("Expression::operation_term" => [
+                            node!("Identifier::identifier" => [leaf!("c")]),
+                        ]),
+                    ]),
+                ])
+            ));
+        }
+
+        it "grouping" {
+            expect_success_eq("(0)", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    leaf!("("),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("0"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                    leaf!(")"),
+                ])
+            ));
+        }
+
+        it "same priority 1" {
             expect_success_eq("0 + 1", "Operation::operation", tree!(
                 node!("Operation::operation" => [
                     node!("Expression::operation_term" => [
@@ -780,6 +820,50 @@ speculate!{
                                 node!("value" => [
                                     node!("Literal::decimal_number" => [
                                         leaf!("1"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ])
+            ));
+        }
+
+        it "same priority 2" {
+            expect_success_eq("0 + 1 + 2", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("0"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                    leaf!("+"),
+                    node!("Operation::arithmetic1" => [
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("1"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                        leaf!("+"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("2"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),

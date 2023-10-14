@@ -257,6 +257,139 @@ speculate!{
         }
     }
 
+    describe "operation" {
+        it "addition" {
+            assert_eq!(
+                new_analyzer().operation(
+                    node!("Operation::operation" => [
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
+                        leaf!("+"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
+                    ]).into_node(),
+                ),
+                HirOperation::Addition(
+                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                ),
+            );
+        }
+
+        it "multiplication" {
+            assert_eq!(
+                new_analyzer().operation(
+                    node!("Operation::operation" => [
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
+                        leaf!("*"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
+                    ]).into_node(),
+                ),
+                HirOperation::Multiplication(
+                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                ),
+            );
+        }
+
+        it "path resolution" {
+            assert_eq!(
+                new_analyzer().operation(
+                    node!("Operation::operation" => [
+                        node!("Expression::operation_term" => [
+                            node!("Identifier::identifier" => [leaf!("a")]),
+                        ]),
+                        leaf!("::"),
+                        node!("Operation::arithmetic1" => [
+                            node!("Expression::operation_term" => [
+                                node!("Identifier::identifier" => [leaf!("b")]),
+                            ]),
+                            leaf!("::"),
+                            node!("Expression::operation_term" => [
+                                node!("Identifier::identifier" => [leaf!("c")]),
+                            ]),
+                        ]),
+                    ]).into_node(),
+                ),
+                HirOperation::Path(HirPath::Unresolved(vec![
+                    HirExpression::Identifier("a".to_string()),
+                    HirExpression::Identifier("b".to_string()),
+                    HirExpression::Identifier("c".to_string()),
+                ])),
+            );
+        }
+
+        it "grouping" {
+            assert_eq!(
+                new_analyzer().operation(
+                    node!("Operation::operation" => [
+                        leaf!("("),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
+                        leaf!(")"),
+                    ]).into_node(),
+                ),
+                HirOperation::Group(HirExpression::Literal(HirLiteral::Boolean(true))),
+            );
+        }
+
+        it "contained term" {
+            assert_eq!(
+                new_analyzer().operation(
+                    node!("Operation::operation" => [
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
+                        leaf!("+"),
+                        node!("Operation::arithmetic1" => [
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::boolean" => [leaf!("true")]),
+                                ]),
+                            ]),
+                            leaf!("*"),
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::boolean" => [leaf!("true")]),
+                                ]),
+                            ]),
+                        ]),
+                    ]).into_node(),
+                ),
+                HirOperation::Addition(
+                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                    HirExpression::Operation(
+                        Box::new(
+                            HirOperation::Multiplication(
+                                HirExpression::Literal(HirLiteral::Boolean(true)),
+                                HirExpression::Literal(HirLiteral::Boolean(true)),
+                            ),
+                        ),
+                    ),
+                ),
+            );
+        }
+    }
+
     describe "data type" {
         describe "primitive" {
             it "primitive data type" {

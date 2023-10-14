@@ -3,7 +3,9 @@ use super::*;
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirExpression {
     Literal(HirLiteral),
+    Operation(Box<HirOperation>),
     DataType(HirDataType),
+    Identifier(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -39,6 +41,15 @@ pub struct HirIntegerExponent {
 pub struct HirFloatLiteral {
     pub data_type: Option<HirPrimitiveDataType>,
     pub value: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirOperation {
+    Addition(HirExpression, HirExpression),
+    Multiplication(HirExpression, HirExpression),
+    MemberAccess(HirExpression, HirExpression),
+    Path(HirPath),
+    Group(HirExpression),
 }
 
 #[derive(Clone, Debug, PartialEq)]
