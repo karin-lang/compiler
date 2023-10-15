@@ -304,6 +304,7 @@ struct Operation {
     operation: Element,
     arithmetic1: Element,
     arithmetic2: Element,
+    prefix: Element,
     postfix: Element,
     path_resolution: Element,
     grouping: Element,
@@ -347,9 +348,16 @@ impl VoltModule for Operation {
                 Operation::arithmetic2().expand_once(),
             ];
             arithmetic2 := choice![
-                Operation::postfix()
+                Operation::prefix()
                     .reduce(term_optimization_reducer)
                     .separate_times(seq![WHITESPACE(), choice![str("*"), str("/")], WHITESPACE()], separate_times),
+                Operation::prefix().expand_once(),
+            ];
+            prefix := choice![
+                seq![
+                    choice![str("!"), str("~"), str("-")].min(1), WHITESPACE(),
+                    Operation::postfix().reduce(term_optimization_reducer),
+                ],
                 Operation::postfix().expand_once(),
             ];
             postfix := choice![

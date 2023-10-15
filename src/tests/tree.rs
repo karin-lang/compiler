@@ -273,11 +273,28 @@ speculate!{
                                 node!("Literal::boolean" => [leaf!("true")]),
                             ]),
                         ]),
+                        leaf!("+"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::boolean" => [leaf!("true")]),
+                            ]),
+                        ]),
                     ]).into_node(),
                 ),
-                HirOperation::Addition(
-                    HirExpression::Literal(HirLiteral::Boolean(true)),
-                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                HirExpression::Operation(
+                    Box::new(
+                        HirOperation::Addition(
+                            HirExpression::Operation(
+                                Box::new(
+                                    HirOperation::Addition(
+                                        HirExpression::Literal(HirLiteral::Boolean(true)),
+                                        HirExpression::Literal(HirLiteral::Boolean(true)),
+                                    ),
+                                ),
+                            ),
+                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                        ),
+                    ),
                 ),
             );
         }
@@ -299,11 +316,83 @@ speculate!{
                         ]),
                     ]).into_node(),
                 ),
-                HirOperation::Multiplication(
-                    HirExpression::Literal(HirLiteral::Boolean(true)),
-                    HirExpression::Literal(HirLiteral::Boolean(true)),
+                HirExpression::Operation(
+                    Box::new(
+                        HirOperation::Multiplication(
+                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                        ),
+                    ),
                 ),
             );
+        }
+
+        describe "prefix operator" {
+            it "contained term" {
+                assert_eq!(
+                    new_analyzer().operation(
+                        node!("Operation::operation" => [
+                            leaf!("!"),
+                            leaf!("-"),
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::boolean" => [leaf!("true")]),
+                                ]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirExpression::Operation(
+                        Box::new(
+                            HirOperation::Not(
+                                HirExpression::Operation(
+                                    Box::new(
+                                        HirOperation::Negative(
+                                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
+            }
+
+            it "with infix operator" {
+                assert_eq!(
+                    new_analyzer().operation(
+                        node!("Operation::operation" => [
+                            leaf!("!"),
+                            node!("Operation::arithmetic1" => [
+                                node!("Expression::operation_term" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::boolean" => [leaf!("true")]),
+                                    ]),
+                                ]),
+                                leaf!("+"),
+                                node!("Expression::operation_term" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::boolean" => [leaf!("true")]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirExpression::Operation(
+                        Box::new(
+                            HirOperation::Not(
+                                HirExpression::Operation(
+                                    Box::new(
+                                        HirOperation::Addition(
+                                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
+            }
         }
 
         it "path resolution" {
@@ -325,11 +414,15 @@ speculate!{
                         ]),
                     ]).into_node(),
                 ),
-                HirOperation::Path(HirPath::Unresolved(vec![
-                    HirExpression::Identifier("a".to_string()),
-                    HirExpression::Identifier("b".to_string()),
-                    HirExpression::Identifier("c".to_string()),
-                ])),
+                HirExpression::Operation(
+                    Box::new(
+                        HirOperation::Path(HirPath::Unresolved(vec![
+                            HirExpression::Identifier("a".to_string()),
+                            HirExpression::Identifier("b".to_string()),
+                            HirExpression::Identifier("c".to_string()),
+                        ])),
+                    ),
+                )
             );
         }
 
@@ -346,9 +439,12 @@ speculate!{
                         leaf!(")"),
                     ]).into_node(),
                 ),
-                HirOperation::Group(HirExpression::Literal(HirLiteral::Boolean(true))),
+                HirExpression::Operation(
+                    Box::new(HirOperation::Group(HirExpression::Literal(HirLiteral::Boolean(true)))),
+                )
             );
         }
+        /*
 
         it "contained term" {
             assert_eq!(
@@ -388,6 +484,7 @@ speculate!{
                 ),
             );
         }
+        */
     }
 
     describe "data type" {

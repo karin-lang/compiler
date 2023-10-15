@@ -797,6 +797,45 @@ speculate!{
             ));
         }
 
+        it "prefix operator 1" {
+            expect_success_eq("!0", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    leaf!("!"),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("0"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ])
+            ));
+        }
+
+        it "prefix operator 2" {
+            expect_success_eq("!-0", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    leaf!("!"),
+                    leaf!("-"),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("0"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ])
+            ));
+        }
+
         it "same priority 1" {
             expect_success_eq("0 + 1", "Operation::operation", tree!(
                 node!("Operation::operation" => [

@@ -141,7 +141,7 @@ impl TreeAnalysis {
 
         match content_node.name.as_str() {
             "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
-            "Operation::operation" => HirExpression::Operation(Box::new(self.operation(content_node))),
+            "Operation::operation" => self.operation(content_node),
             "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
             "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node)),
             _ => unreachable!("unknown expression"),
@@ -209,73 +209,83 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn operation(&mut self, node: &SyntaxNode) -> HirOperation {
-        let elements = &node.children;
+    pub fn operation(&mut self, node: &SyntaxNode) -> HirExpression {
+        let mut elements = node.children.iter();
+        let left = self.construct_prefix_operation(&mut elements);
+        self.construct_infix_operation(&mut elements, left)
+    }
 
-        let mut get_term = |elements: &Vec<SyntaxChild>, index: usize| -> HirExpression {
-            let target = elements.get_node(index);
+    fn construct_prefix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>) -> HirExpression {
+        let first_node = elements.next().expect("expected first operation term or operator");
 
-            if target.name == "Expression::operation_term" {
-                self.expression(target)
-            } else {
-                HirExpression::Operation(Box::new(self.operation(target)))
-            }
+        let operator = match &first_node {
+            SyntaxChild::Node(_) => return self.operation_term(first_node),
+            SyntaxChild::Leaf(leaf) => leaf.value.as_str(),
+            _ => unreachable!(),
         };
 
-        // prefix and grouping operators
-        if let Some(first_leaf) = elements.get_leaf_or_none(0) {
-            // todo: add more operators
-            match first_leaf.value.as_str() {
-                "(" => return HirOperation::Group(get_term(elements, 1)),
-                _ => (),
-            }
-        }
+        let term = self.construct_prefix_operation(elements);
 
-        // infix operators
-        if let Some(second_leaf) = elements.get_leaf_or_none(1) {
-            match second_leaf.value.as_str() {
-                "+" => return HirOperation::Addition(
-                    get_term(elements, 0),
-                    get_term(elements, 2),
-                ),
-                "*" => return HirOperation::Multiplication(
-                    get_term(elements, 0),
-                    get_term(elements, 2),
-                ),
-                "." => return HirOperation::MemberAccess(
-                    get_term(elements, 0),
-                    get_term(elements, 2),
-                ),
-                "::" => {
-                    let left = get_term(elements, 0);
-                    let right = get_term(elements, 2);
+        let operation = match operator {
+            "!" => HirOperation::Not(term),
+            "~" => HirOperation::BitNot(term),
+            "-" => HirOperation::Negative(term),
+            "(" => {
+                elements.next();
+                return term;
+            },
+            _ => unreachable!("unknown prefix operator"),
+        };
 
-                    // todo: reject expression grouping
-                    match left {
-                        left @ (HirExpression::DataType(_) | HirExpression::Identifier(_)) => {
-                            let mut segments = vec![left];
+        HirExpression::Operation(Box::new(operation))
+    }
 
-                            match &right {
-                                HirExpression::Operation(operation) => match &**operation {
-                                    HirOperation::Path(path) => match &*path {
-                                        HirPath::Resolved(_) => unreachable!(),
-                                        HirPath::Unresolved(right_segments) => segments.append(&mut right_segments.clone()),
-                                    },
-                                    _ => segments.push(right),
-                                },
-                                _ => segments.push(right),
-                            }
+    fn construct_infix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>, left: HirExpression) -> HirExpression {
+        let operator = match elements.next() {
+            Some(v) => v.into_leaf().value.as_str(),
+            None => return left,
+        };
 
-                            return HirOperation::Path(HirPath::Unresolved(segments));
+        let right = self.operation_term(elements.next().expect("expected right operation term"));
+
+        let new_left = match operator {
+            "+" => HirOperation::Addition(left, right),
+            "*" => HirOperation::Multiplication(left, right),
+            "." => HirOperation::MemberAccess(left, right),
+            // todo: reject expression grouping
+            "::" => match left {
+                left @ (HirExpression::DataType(_) | HirExpression::Identifier(_)) => {
+                    let mut segments = vec![left];
+
+                    match &right {
+                        HirExpression::Operation(operation) => match &**operation {
+                            HirOperation::Path(path) => match &*path {
+                                HirPath::Resolved(_) => unreachable!(),
+                                HirPath::Unresolved(right_segments) => segments.append(&mut right_segments.clone()),
+                            },
+                            _ => segments.push(right),
                         },
-                        _ => unimplemented!("error handling is not implemented"),
+                        _ => segments.push(right),
                     }
-                },
-                _ => (),
-            }
-        }
 
-        unreachable!("unknown operator");
+                    HirOperation::Path(HirPath::Unresolved(segments))
+                },
+                _ => unimplemented!("error handling is not implemented"),
+            },
+            _ => unreachable!("unknown operator `{}`", operator),
+        };
+
+        self.construct_infix_operation(elements, HirExpression::Operation(Box::new(new_left)))
+    }
+
+    fn operation_term(&mut self, term_node: &SyntaxChild) -> HirExpression {
+        let target = term_node.into_node();
+
+        if target.name == "Expression::operation_term" {
+            self.expression(target)
+        } else {
+            self.operation(target)
+        }
     }
 
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {

@@ -47,6 +47,9 @@ pub struct HirFloatLiteral {
 pub enum HirOperation {
     Addition(HirExpression, HirExpression),
     Multiplication(HirExpression, HirExpression),
+    Negative(HirExpression),
+    Not(HirExpression),
+    BitNot(HirExpression),
     MemberAccess(HirExpression, HirExpression),
     Path(HirPath),
     Group(HirExpression),
