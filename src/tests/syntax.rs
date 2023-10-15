@@ -766,14 +766,12 @@ speculate!{
                         node!("Identifier::identifier" => [leaf!("a")]),
                     ]),
                     leaf!("::"),
-                    node!("Operation::path_resolution" => [
-                        node!("Expression::operation_term" => [
-                            node!("Identifier::identifier" => [leaf!("b")]),
-                        ]),
-                        leaf!("::"),
-                        node!("Expression::operation_term" => [
-                            node!("Identifier::identifier" => [leaf!("c")]),
-                        ]),
+                    node!("Expression::operation_term" => [
+                        node!("Identifier::identifier" => [leaf!("b")]),
+                    ]),
+                    leaf!("::"),
+                    node!("Expression::operation_term" => [
+                        node!("Identifier::identifier" => [leaf!("c")]),
                     ]),
                 ])
             ));
@@ -844,26 +842,24 @@ speculate!{
                         ]),
                     ]),
                     leaf!("+"),
-                    node!("Operation::arithmetic1" => [
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("1"),
-                                        ]),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("1"),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                        leaf!("+"),
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("2"),
-                                        ]),
+                    ]),
+                    leaf!("+"),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("2"),
                                     ]),
                                 ]),
                             ]),
@@ -888,7 +884,7 @@ speculate!{
                         ]),
                     ]),
                     leaf!("+"),
-                    node!("Operation::arithmetic1" => [
+                    node!("Operation::arithmetic2" => [
                         node!("Expression::operation_term" => [
                             node!("Literal::literal" => [
                                 node!("Literal::number" => [

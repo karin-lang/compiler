@@ -335,39 +335,33 @@ impl VoltModule for Operation {
             }
         };
 
+        let separate_times = LoopRange::min(1);
+
         // Don't hide operators to distinguish them and recognize exposed element in expression reducer.
         define_rules!{
             operation := Operation::arithmetic1().expand_once();
             arithmetic1 := choice![
-                seq![
-                    Operation::arithmetic2().reduce(term_optimization_reducer), WHITESPACE(),
-                    choice![str("+"), str("-")], WHITESPACE(),
-                    Operation::arithmetic1().reduce(term_optimization_reducer),
-                ],
+                Operation::arithmetic2()
+                    .reduce(term_optimization_reducer)
+                    .separate_times(seq![WHITESPACE(), choice![str("+"), str("-")], WHITESPACE()], separate_times),
                 Operation::arithmetic2().expand_once(),
             ];
             arithmetic2 := choice![
-                seq![
-                    Operation::postfix().reduce(term_optimization_reducer), WHITESPACE(),
-                    choice![str("*"), str("/")], WHITESPACE(),
-                    Operation::arithmetic2().reduce(term_optimization_reducer),
-                ],
+                Operation::postfix()
+                    .reduce(term_optimization_reducer)
+                    .separate_times(seq![WHITESPACE(), choice![str("*"), str("/")], WHITESPACE()], separate_times),
                 Operation::postfix().expand_once(),
             ];
             postfix := choice![
-                seq![
-                    Operation::path_resolution().reduce(term_optimization_reducer), WHITESPACE(),
-                    str("."), WHITESPACE(),
-                    Operation::postfix().reduce(term_optimization_reducer),
-                ],
+                Operation::path_resolution()
+                    .reduce(term_optimization_reducer)
+                    .separate_times(seq![WHITESPACE(), str("."), WHITESPACE()], separate_times),
                 Operation::path_resolution().expand_once(),
             ];
             path_resolution := choice![
-                seq![
-                    Operation::grouping().reduce(term_optimization_reducer), WHITESPACE(),
-                    str("::"), WHITESPACE(),
-                    Operation::path_resolution().reduce(term_optimization_reducer),
-                ],
+                Operation::grouping()
+                    .reduce(term_optimization_reducer)
+                    .separate_times(seq![WHITESPACE(), str("::"), WHITESPACE()], separate_times),
                 Operation::grouping().expand_once(),
             ];
             grouping := choice![
