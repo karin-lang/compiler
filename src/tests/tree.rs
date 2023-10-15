@@ -286,11 +286,11 @@ speculate!{
                     ),
                     HirExpression::Operation(
                         Box::new(
-                            HirOperation::Addition(
+                            HirOperation::Add(
                                 HirExpression::Literal(HirLiteral::Boolean(true)),
                                 HirExpression::Operation(
                                     Box::new(
-                                        HirOperation::Multiplication(
+                                        HirOperation::Multiply(
                                             HirExpression::Literal(HirLiteral::Boolean(true)),
                                             HirExpression::Literal(HirLiteral::Boolean(true)),
                                         ),
@@ -358,7 +358,7 @@ speculate!{
                             HirOperation::Not(
                                 HirExpression::Operation(
                                     Box::new(
-                                        HirOperation::Addition(
+                                        HirOperation::Add(
                                             HirExpression::Literal(HirLiteral::Boolean(true)),
                                             HirExpression::Literal(HirLiteral::Boolean(true)),
                                         ),
@@ -387,7 +387,7 @@ speculate!{
                     ),
                     HirExpression::Operation(
                         Box::new(
-                            HirOperation::ErrorPropagation(
+                            HirOperation::Propagate(
                                 HirExpression::Operation(
                                     Box::new(
                                         HirOperation::Nonnize(
@@ -426,7 +426,7 @@ speculate!{
                             HirOperation::Nonnize(
                                 HirExpression::Operation(
                                     Box::new(
-                                        HirOperation::Addition(
+                                        HirOperation::Add(
                                             HirExpression::Literal(HirLiteral::Boolean(true)),
                                             HirExpression::Literal(HirLiteral::Boolean(true)),
                                         ),
@@ -464,10 +464,10 @@ speculate!{
                 ),
                 HirExpression::Operation(
                     Box::new(
-                        HirOperation::Addition(
+                        HirOperation::Add(
                             HirExpression::Operation(
                                 Box::new(
-                                    HirOperation::Addition(
+                                    HirOperation::Add(
                                         HirExpression::Literal(HirLiteral::Boolean(true)),
                                         HirExpression::Literal(HirLiteral::Boolean(true)),
                                     ),

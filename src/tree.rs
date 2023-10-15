@@ -241,7 +241,7 @@ impl TreeAnalysis {
             "~e" => HirOperation::BitNot(term),
             "-e" => HirOperation::Negative(term),
             "e!" => HirOperation::Nonnize(term),
-            "e?" => HirOperation::ErrorPropagation(term),
+            "e?" => HirOperation::Propagate(term),
             "(" => HirOperation::Group(term),
             _ => unreachable!("unknown prefix operator"),
         };
@@ -258,8 +258,8 @@ impl TreeAnalysis {
         let right = self.operation_term(elements.next().expect("expected right operation term"));
 
         let new_left = match operator {
-            "+" => HirOperation::Addition(left, right),
-            "*" => HirOperation::Multiplication(left, right),
+            "+" => HirOperation::Add(left, right),
+            "*" => HirOperation::Multiply(left, right),
             "." => HirOperation::MemberAccess(left, right),
             // todo: reject expression grouping
             "::" => match left {

@@ -45,13 +45,13 @@ pub struct HirFloatLiteral {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirOperation {
-    Addition(HirExpression, HirExpression),
-    Multiplication(HirExpression, HirExpression),
+    Add(HirExpression, HirExpression),
+    Multiply(HirExpression, HirExpression),
     Negative(HirExpression),
     Not(HirExpression),
     BitNot(HirExpression),
     Nonnize(HirExpression),
-    ErrorPropagation(HirExpression),
+    Propagate(HirExpression),
     MemberAccess(HirExpression, HirExpression),
     Path(HirPath),
     Group(HirExpression),
