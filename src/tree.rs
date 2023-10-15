@@ -232,7 +232,7 @@ impl TreeAnalysis {
             "-" => HirOperation::Negative(term),
             "(" => {
                 elements.next();
-                return term;
+                HirOperation::Group(term)
             },
             _ => unreachable!("unknown prefix operator"),
         };
