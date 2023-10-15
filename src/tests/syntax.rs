@@ -759,122 +759,221 @@ speculate!{
     }
 
     describe "operation" {
-        it "path resolution" {
-            expect_success_eq("a::b::c", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    node!("Expression::operation_term" => [
-                        node!("Identifier::identifier" => [leaf!("a")]),
-                    ]),
-                    leaf!("::"),
-                    node!("Expression::operation_term" => [
-                        node!("Identifier::identifier" => [leaf!("b")]),
-                    ]),
-                    leaf!("::"),
-                    node!("Expression::operation_term" => [
-                        node!("Identifier::identifier" => [leaf!("c")]),
-                    ]),
-                ])
-            ));
-        }
-
-        it "grouping" {
-            expect_success_eq("(0)", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    leaf!("("),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+        describe "infix operator" {
+            it "associates with right term" {
+                expect_success_eq("0 + 1 + 2", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                ])
-            ));
-        }
-
-        it "prefix operator 1" {
-            expect_success_eq("!0", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    leaf!("!e"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        leaf!("+"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("1"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                ])
-            ));
-        }
-
-        it "prefix operator 2" {
-            expect_success_eq("!-0", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    leaf!("!e"),
-                    leaf!("-e"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        leaf!("+"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("2"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                ])
-            ));
-        }
+                    ])
+                ));
+            }
 
-        it "postfix operator 1" {
-            expect_success_eq("0!", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    leaf!("e!"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+            it "prioritizes higher priority operator 1" {
+                expect_success_eq("0 * 1 + 2", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        node!("Operation::arithmetic2" => [
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("0"),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                            leaf!("*"),
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("1"),
+                                            ]),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                ])
-            ));
-        }
-
-        it "postfix operator 2" {
-            expect_success_eq("0!?", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    leaf!("e?"),
-                    leaf!("e!"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        leaf!("+"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("2"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                ])
-            ));
+                    ])
+                ));
+            }
+
+            it "prioritizes higher priority operator 2" {
+                expect_success_eq("0 + 1 * 2", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                        leaf!("+"),
+                        node!("Operation::arithmetic2" => [
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("1"),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                            leaf!("*"),
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("2"),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
         }
 
-        it "same priority 1" {
+        describe "prefix operator" {
+            it "adds e-sign to operator leaf" {
+                expect_success_eq("!0", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        leaf!("!e"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            it "accepts multiple operators" {
+                expect_success_eq("!-0", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        leaf!("!e"),
+                        leaf!("-e"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+        }
+
+        describe "postfix operator" {
+            it "adds e-sign to operator leaf" {
+                expect_success_eq("0!", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        leaf!("e!"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+
+            it "accepts multiple operators" {
+                expect_success_eq("0!?", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        leaf!("e?"),
+                        leaf!("e!"),
+                        node!("Expression::operation_term" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ])
+                ));
+            }
+        }
+
+        it "addition" {
             expect_success_eq("0 + 1", "Operation::operation", tree!(
                 node!("Operation::operation" => [
                     node!("Expression::operation_term" => [
@@ -904,127 +1003,34 @@ speculate!{
             ));
         }
 
-        it "same priority 2" {
-            expect_success_eq("0 + 1 + 2", "Operation::operation", tree!(
+        it "path resolution" {
+            expect_success_eq("a::b::c", "Operation::operation", tree!(
                 node!("Operation::operation" => [
+                    node!("Expression::operation_term" => [
+                        node!("Identifier::identifier" => [leaf!("a")]),
+                    ]),
+                    leaf!("::"),
+                    node!("Expression::operation_term" => [
+                        node!("Identifier::identifier" => [leaf!("b")]),
+                    ]),
+                    leaf!("::"),
+                    node!("Expression::operation_term" => [
+                        node!("Identifier::identifier" => [leaf!("c")]),
+                    ]),
+                ])
+            ));
+        }
+
+        it "grouping" {
+            expect_success_eq("(0)", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    leaf!("("),
                     node!("Expression::operation_term" => [
                         node!("Literal::literal" => [
                             node!("Literal::number" => [
                                 node!("value" => [
                                     node!("Literal::decimal_number" => [
                                         leaf!("0"),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                    leaf!("+"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("1"),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                    leaf!("+"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("2"),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                ])
-            ));
-        }
-
-        it "difference priority 1" {
-            expect_success_eq("0 + 1 * 2", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                    leaf!("+"),
-                    node!("Operation::arithmetic2" => [
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("1"),
-                                        ]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                        leaf!("*"),
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("2"),
-                                        ]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                ])
-            ));
-        }
-
-        it "different priority 2" {
-            expect_success_eq("0 * 1 + 2", "Operation::operation", tree!(
-                node!("Operation::operation" => [
-                    node!("Operation::arithmetic2" => [
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("0"),
-                                        ]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                        leaf!("*"),
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("1"),
-                                        ]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                    leaf!("+"),
-                    node!("Expression::operation_term" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("2"),
                                     ]),
                                 ]),
                             ]),
