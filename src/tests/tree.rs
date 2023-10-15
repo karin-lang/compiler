@@ -332,8 +332,8 @@ speculate!{
                 assert_eq!(
                     new_analyzer().operation(
                         node!("Operation::operation" => [
-                            leaf!("!"),
-                            leaf!("-"),
+                            leaf!("!e"),
+                            leaf!("-e"),
                             node!("Expression::operation_term" => [
                                 node!("Literal::literal" => [
                                     node!("Literal::boolean" => [leaf!("true")]),
@@ -361,7 +361,7 @@ speculate!{
                 assert_eq!(
                     new_analyzer().operation(
                         node!("Operation::operation" => [
-                            leaf!("!"),
+                            leaf!("!e"),
                             node!("Operation::arithmetic1" => [
                                 node!("Expression::operation_term" => [
                                     node!("Literal::literal" => [
@@ -380,6 +380,74 @@ speculate!{
                     HirExpression::Operation(
                         Box::new(
                             HirOperation::Not(
+                                HirExpression::Operation(
+                                    Box::new(
+                                        HirOperation::Addition(
+                                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
+            }
+        }
+
+        describe "postfix operator" {
+            it "contained term" {
+                assert_eq!(
+                    new_analyzer().operation(
+                        node!("Operation::operation" => [
+                            leaf!("e?"),
+                            leaf!("e!"),
+                            node!("Expression::operation_term" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::boolean" => [leaf!("true")]),
+                                ]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirExpression::Operation(
+                        Box::new(
+                            HirOperation::ErrorPropagation(
+                                HirExpression::Operation(
+                                    Box::new(
+                                        HirOperation::Nonnize(
+                                            HirExpression::Literal(HirLiteral::Boolean(true)),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                );
+            }
+
+            it "with infix operator" {
+                assert_eq!(
+                    new_analyzer().operation(
+                        node!("Operation::operation" => [
+                            leaf!("e!"),
+                            node!("Operation::arithmetic1" => [
+                                node!("Expression::operation_term" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::boolean" => [leaf!("true")]),
+                                    ]),
+                                ]),
+                                leaf!("+"),
+                                node!("Expression::operation_term" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::boolean" => [leaf!("true")]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirExpression::Operation(
+                        Box::new(
+                            HirOperation::Nonnize(
                                 HirExpression::Operation(
                                     Box::new(
                                         HirOperation::Addition(
@@ -436,7 +504,6 @@ speculate!{
                                 node!("Literal::boolean" => [leaf!("true")]),
                             ]),
                         ]),
-                        leaf!(")"),
                     ]).into_node(),
                 ),
                 HirExpression::Operation(

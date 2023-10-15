@@ -792,7 +792,6 @@ speculate!{
                             ]),
                         ]),
                     ]),
-                    leaf!(")"),
                 ])
             ));
         }
@@ -800,7 +799,7 @@ speculate!{
         it "prefix operator 1" {
             expect_success_eq("!0", "Operation::operation", tree!(
                 node!("Operation::operation" => [
-                    leaf!("!"),
+                    leaf!("!e"),
                     node!("Expression::operation_term" => [
                         node!("Literal::literal" => [
                             node!("Literal::number" => [
@@ -819,8 +818,47 @@ speculate!{
         it "prefix operator 2" {
             expect_success_eq("!-0", "Operation::operation", tree!(
                 node!("Operation::operation" => [
-                    leaf!("!"),
-                    leaf!("-"),
+                    leaf!("!e"),
+                    leaf!("-e"),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("0"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ])
+            ));
+        }
+
+        it "postfix operator 1" {
+            expect_success_eq("0!", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    leaf!("e!"),
+                    node!("Expression::operation_term" => [
+                        node!("Literal::literal" => [
+                            node!("Literal::number" => [
+                                node!("value" => [
+                                    node!("Literal::decimal_number" => [
+                                        leaf!("0"),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ])
+            ));
+        }
+
+        it "postfix operator 2" {
+            expect_success_eq("0!?", "Operation::operation", tree!(
+                node!("Operation::operation" => [
+                    leaf!("e?"),
+                    leaf!("e!"),
                     node!("Expression::operation_term" => [
                         node!("Literal::literal" => [
                             node!("Literal::number" => [

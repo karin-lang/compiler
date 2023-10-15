@@ -50,6 +50,8 @@ pub enum HirOperation {
     Negative(HirExpression),
     Not(HirExpression),
     BitNot(HirExpression),
+    Nonnize(HirExpression),
+    ErrorPropagation(HirExpression),
     MemberAccess(HirExpression, HirExpression),
     Path(HirPath),
     Group(HirExpression),

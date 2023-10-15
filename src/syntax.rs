@@ -306,6 +306,7 @@ struct Operation {
     arithmetic2: Element,
     prefix: Element,
     postfix: Element,
+    member_access: Element,
     path_resolution: Element,
     grouping: Element,
 }
@@ -336,6 +337,31 @@ impl VoltModule for Operation {
             }
         };
 
+        let reverse_reducer = |mut children: Vec<SyntaxChild>| {
+            children.reverse();
+            children
+        };
+
+        let prefix_indication_reducer = |children: Vec<SyntaxChild>| {
+            children.iter().map(|v| {
+                if let SyntaxChild::Leaf(leaf) = v {
+                    SyntaxChild::leaf(leaf.start.clone(), format!("{}e", leaf.value))
+                } else {
+                    unreachable!("expected prefix operator leaf");
+                }
+            }).collect()
+        };
+
+        let postfix_indication_reducer = |children: Vec<SyntaxChild>| {
+            children.iter().map(|v| {
+                if let SyntaxChild::Leaf(leaf) = v {
+                    SyntaxChild::leaf(leaf.start.clone(), format!("e{}", leaf.value))
+                } else {
+                    unreachable!("expected prefix operator leaf");
+                }
+            }).collect()
+        };
+
         let separate_times = LoopRange::min(1);
 
         // Don't hide operators to distinguish them and recognize exposed element in expression reducer.
@@ -355,12 +381,20 @@ impl VoltModule for Operation {
             ];
             prefix := choice![
                 seq![
-                    choice![str("!"), str("~"), str("-")].min(1), WHITESPACE(),
+                    choice![str("!"), str("~"), str("-")].min(1).reduce(prefix_indication_reducer), WHITESPACE(),
                     Operation::postfix().reduce(term_optimization_reducer),
                 ],
                 Operation::postfix().expand_once(),
             ];
             postfix := choice![
+                // Reverse the order of children to unify outfix operator conversion.
+                seq![
+                    Operation::member_access().reduce(term_optimization_reducer), WHITESPACE(),
+                    choice![str("!"), str("?")].min(1).reduce(postfix_indication_reducer),
+                ].reduce(reverse_reducer),
+                Operation::member_access().expand_once(),
+            ];
+            member_access := choice![
                 Operation::path_resolution()
                     .reduce(term_optimization_reducer)
                     .separate_times(seq![WHITESPACE(), str("."), WHITESPACE()], separate_times),
@@ -376,7 +410,7 @@ impl VoltModule for Operation {
                 seq![
                     str("("), WHITESPACE(),
                     Expression::operation_term(), WHITESPACE(),
-                    str(")"),
+                    str(")").hide(),
                 ],
                 Expression::operation_term(),
             ];

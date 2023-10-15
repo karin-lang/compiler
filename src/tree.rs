@@ -212,7 +212,17 @@ impl TreeAnalysis {
     pub fn operation(&mut self, node: &SyntaxNode) -> HirExpression {
         let mut elements = node.children.iter();
         let left = self.construct_prefix_operation(&mut elements);
-        self.construct_infix_operation(&mut elements, left)
+        self.construct_outfix_operation(&mut elements, left)
+    }
+
+    fn operation_term(&mut self, term_node: &SyntaxChild) -> HirExpression {
+        let target = term_node.into_node();
+
+        if target.name == "Expression::operation_term" {
+            self.expression(target)
+        } else {
+            self.operation(target)
+        }
     }
 
     fn construct_prefix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>) -> HirExpression {
@@ -227,20 +237,19 @@ impl TreeAnalysis {
         let term = self.construct_prefix_operation(elements);
 
         let operation = match operator {
-            "!" => HirOperation::Not(term),
-            "~" => HirOperation::BitNot(term),
-            "-" => HirOperation::Negative(term),
-            "(" => {
-                elements.next();
-                HirOperation::Group(term)
-            },
+            "!e" => HirOperation::Not(term),
+            "~e" => HirOperation::BitNot(term),
+            "-e" => HirOperation::Negative(term),
+            "e!" => HirOperation::Nonnize(term),
+            "e?" => HirOperation::ErrorPropagation(term),
+            "(" => HirOperation::Group(term),
             _ => unreachable!("unknown prefix operator"),
         };
 
         HirExpression::Operation(Box::new(operation))
     }
 
-    fn construct_infix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>, left: HirExpression) -> HirExpression {
+    fn construct_outfix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>, left: HirExpression) -> HirExpression {
         let operator = match elements.next() {
             Some(v) => v.into_leaf().value.as_str(),
             None => return left,
@@ -275,17 +284,7 @@ impl TreeAnalysis {
             _ => unreachable!("unknown operator `{}`", operator),
         };
 
-        self.construct_infix_operation(elements, HirExpression::Operation(Box::new(new_left)))
-    }
-
-    fn operation_term(&mut self, term_node: &SyntaxChild) -> HirExpression {
-        let target = term_node.into_node();
-
-        if target.name == "Expression::operation_term" {
-            self.expression(target)
-        } else {
-            self.operation(target)
-        }
+        self.construct_outfix_operation(elements, HirExpression::Operation(Box::new(new_left)))
     }
 
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {
