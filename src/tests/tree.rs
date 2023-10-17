@@ -28,7 +28,7 @@ speculate!{
                     (
                         HirPathIndex::from(0),
                         HirPathNode {
-                            id: "h".to_string(),
+                            id: "h".into(),
                             kind: HirPathKind::Hako,
                             parent: None,
                             children: Vec::new(),
@@ -63,7 +63,7 @@ speculate!{
                         (
                             HirPathIndex::from(0),
                             HirPathNode {
-                                id: "m".to_string(),
+                                id: "m".into(),
                                 kind: HirPathKind::Module,
                                 parent: Some(HirPathIndex::from(100)),
                                 children: Vec::new(),
@@ -502,9 +502,9 @@ speculate!{
                 HirExpression::Operation(
                     Box::new(
                         HirOperation::Path(HirPath::Unresolved(vec![
-                            HirExpression::Identifier("a".to_string()),
-                            HirExpression::Identifier("b".to_string()),
-                            HirExpression::Identifier("c".to_string()),
+                            "a".into(),
+                            "b".into(),
+                            "c".into(),
                         ])),
                     ),
                 )

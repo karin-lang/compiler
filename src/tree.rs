@@ -57,13 +57,13 @@ impl TreeAnalysis {
         }
 
         let path_node = HirPathNode {
-            id: hako.id.clone(),
+            id: hako.id.clone().into(),
             kind: HirPathKind::Hako,
             parent: None,
             children: child_path_indexes,
         };
 
-        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node, true);
+        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node);
     }
 
     pub fn module(&mut self, module: &AstModule, parent: HirPathIndex) -> HirPathIndex {
@@ -71,13 +71,13 @@ impl TreeAnalysis {
         let child_path_indexes = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
 
         let path_node = HirPathNode {
-            id: module.id.clone(),
+            id: module.id.clone().into(),
             kind: HirPathKind::Module,
             parent: Some(parent),
             children: child_path_indexes,
         };
 
-        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node, false);
+        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node);
         path_index
     }
 
@@ -143,7 +143,7 @@ impl TreeAnalysis {
             "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
             "Operation::operation" => self.operation(content_node),
             "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
-            "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node)),
+            "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node).into()),
             _ => unreachable!("unknown expression"),
         }
     }
@@ -262,29 +262,33 @@ impl TreeAnalysis {
             "*" => HirOperation::Multiply(left, right),
             "." => HirOperation::MemberAccess(left, right),
             // todo: reject expression grouping
-            "::" => match left {
-                left @ (HirExpression::DataType(_) | HirExpression::Identifier(_)) => {
-                    let mut segments = vec![left];
+            "::" => {
+                let mut segments: Vec<HirPathSegment> = vec![self.path_segment(left)];
 
-                    match &right {
-                        HirExpression::Operation(operation) => match &**operation {
-                            HirOperation::Path(path) => match &*path {
-                                HirPath::Resolved(_) => unreachable!(),
-                                HirPath::Unresolved(right_segments) => segments.append(&mut right_segments.clone()),
-                            },
-                            _ => segments.push(right),
+                match &right {
+                    HirExpression::Operation(operation) => match &**operation {
+                        HirOperation::Path(path) => match &*path {
+                            HirPath::Resolved(_) => unreachable!("path is already resolved"),
+                            HirPath::Unresolved(right_segments) => segments.append(&mut right_segments.clone()),
                         },
-                        _ => segments.push(right),
-                    }
+                        _ => segments.push(self.path_segment(right)),
+                    },
+                    _ => segments.push(self.path_segment(right)),
+                }
 
-                    HirOperation::Path(HirPath::Unresolved(segments))
-                },
-                _ => unimplemented!("error handling is not implemented"),
+                HirOperation::Path(HirPath::Unresolved(segments))
             },
             _ => unreachable!("unknown operator `{}`", operator),
         };
 
         self.construct_outfix_operation(elements, HirExpression::Operation(Box::new(new_left)))
+    }
+
+    pub fn path_segment(&mut self, expr: HirExpression) -> HirPathSegment {
+        match expr {
+            HirExpression::Identifier(id) => id,
+            _ => unimplemented!("DataType and error handling is not implemented"),
+        }
     }
 
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {

@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
-
-use super::expr::HirExpression;
+use super::HirIdentifier;
 
 // fix
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -47,26 +46,70 @@ impl HirPathTree {
         }
     }
 
+    pub fn get(&self, index: &HirPathIndex) -> Option<&HirPathNode> {
+        self.nodes.get(index)
+    }
+
     // Path index will be auto-generated when None specified.
-    pub fn add_node(&mut self, index_generator: &mut HirPathIndexGenerator, index: Option<HirPathIndex>, node: HirPathNode, is_hako: bool) -> HirPathIndex {
+    pub fn add_node(&mut self, index_generator: &mut HirPathIndexGenerator, index: Option<HirPathIndex>, node: HirPathNode) -> HirPathIndex {
         let node_index = if let Some(v) = index {
             v
         } else {
             index_generator.generate()
         };
 
-        if is_hako {
+        if node.kind == HirPathKind::Hako {
             self.hako_indexes.push(node_index);
         }
 
         self.nodes.insert(node_index, node);
         node_index
     }
+
+    pub fn find<'a>(&'a self, path_segments: &'a Vec<HirPathSegment>) -> Option<(&'a HirPathIndex, &'a HirPathNode)> {
+        let mut path_segment_iter = path_segments.iter();
+
+        let hako_node_pair = if let Some(hako_segment) = path_segment_iter.next() {
+            match self.find_hako(hako_segment) {
+                Some(v) => v,
+                None => return None,
+            }
+        } else {
+            return None;
+        };
+
+        let mut current_path_node = hako_node_pair;
+
+        while let Some(path_segment) = path_segment_iter.next() {
+            match self.find_child(&current_path_node.1.children, path_segment) {
+                Some(path_node_pair) => current_path_node = path_node_pair,
+                None => return None,
+            }
+        }
+
+        Some(current_path_node)
+    }
+
+    pub fn find_hako<'a>(&'a self, segment: &'a HirPathSegment) -> Option<(&'a HirPathIndex, &'a HirPathNode)> {
+        self.find_child(&self.hako_indexes, segment)
+    }
+
+    fn find_child<'a>(&'a self, indexes: &'a Vec<HirPathIndex>, segment: &'a HirPathSegment) -> Option<(&'a HirPathIndex, &'a HirPathNode)> {
+        for each_index in indexes {
+            if let Some(path_node) = self.get(each_index) {
+                if path_node.id == *segment {
+                    return Some((each_index, path_node));
+                }
+            }
+        }
+
+        None
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirPathNode {
-    pub id: String,
+    pub id: HirIdentifier,
     pub kind: HirPathKind,
     pub parent: Option<HirPathIndex>,
     pub children: Vec<HirPathIndex>,
@@ -82,9 +125,10 @@ pub enum HirPathKind {
     Trait,
 }
 
-// todo: 活用する?
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirPath {
     Resolved(HirPathIndex),
-    Unresolved(Vec<HirExpression>),
+    Unresolved(Vec<HirPathSegment>),
 }
+
+pub type HirPathSegment = HirIdentifier;

@@ -5,7 +5,7 @@ pub enum HirExpression {
     Literal(HirLiteral),
     Operation(Box<HirOperation>),
     DataType(HirDataType),
-    Identifier(String),
+    Identifier(HirIdentifier),
 }
 
 #[derive(Clone, Debug, PartialEq)]

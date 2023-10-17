@@ -1,11 +1,12 @@
-use syntax::Syntax;
-use volt::{rule::RuleId, parser::ParserResult};
-
+pub mod conv;
 pub mod hir;
 pub mod syntax;
 pub mod tree;
 #[cfg(test)]
 mod tests;
+
+use syntax::Syntax;
+use volt::{rule::RuleId, parser::ParserResult};
 
 pub trait Compiler<Input, Output, Options> {
     fn new(options: Options) -> Self;
