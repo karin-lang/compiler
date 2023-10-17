@@ -3,6 +3,7 @@ use speculate::speculate;
 
 speculate!{
     before {
+        #[allow(unused_variables)]
         let generate_path_tree = |nodes: Vec<HirPathNode>| {
             let mut path_tree = HirPathTree::new();
             let mut index_generator = HirPathIndexGenerator::new();
@@ -16,6 +17,18 @@ speculate!{
     }
 
     describe "index generator" {
+        it "returns index that is not increased as None" {
+            let index_generator = HirPathIndexGenerator::new();
+            assert_eq!(index_generator.index(), None);
+        }
+
+        it "increases index" {
+            let mut index_generator = HirPathIndexGenerator::new();
+            assert_eq!(index_generator.generate(), 0.into());
+            assert_eq!(index_generator.index(), Some(0.into()));
+            assert_eq!(index_generator.generate(), 1.into());
+            assert_eq!(index_generator.index(), Some(1.into()));
+        }
     }
 
     describe "node addition" {

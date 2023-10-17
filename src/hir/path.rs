@@ -25,6 +25,14 @@ impl HirPathIndexGenerator {
         HirPathIndexGenerator(0)
     }
 
+    pub fn index(&self) -> Option<HirPathIndex> {
+        if self.0 >= 1 {
+            Some(HirPathIndex(self.0 - 1))
+        } else {
+            None
+        }
+    }
+
     pub fn generate(&mut self) -> HirPathIndex {
         let index = self.0;
         self.0 += 1;
