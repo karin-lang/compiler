@@ -59,6 +59,10 @@ impl HirPathTree {
         };
 
         if node.kind == HirPathKind::Hako {
+            if node.parent.is_some() {
+                panic!("hako path node can't have a parent");
+            }
+
             self.hako_indexes.push(node_index);
         }
 
@@ -94,7 +98,7 @@ impl HirPathTree {
         self.find_child(&self.hako_indexes, segment)
     }
 
-    fn find_child<'a>(&'a self, indexes: &'a Vec<HirPathIndex>, segment: &'a HirPathSegment) -> Option<(&'a HirPathIndex, &'a HirPathNode)> {
+    pub(crate) fn find_child<'a>(&'a self, indexes: &'a Vec<HirPathIndex>, segment: &'a HirPathSegment) -> Option<(&'a HirPathIndex, &'a HirPathNode)> {
         for each_index in indexes {
             if let Some(path_node) = self.get(each_index) {
                 if path_node.id == *segment {
