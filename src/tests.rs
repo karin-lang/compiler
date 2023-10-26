@@ -1,4 +1,4 @@
-// mod js;
+mod js;
 mod path;
 mod syntax;
 mod tree;

@@ -1,5 +1,6 @@
 pub mod hir;
 pub mod ast;
+pub mod js;
 #[cfg(test)]
 mod tests;
 

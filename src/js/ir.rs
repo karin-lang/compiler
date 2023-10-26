@@ -4,8 +4,9 @@ pub trait JsElement {
     fn code(&self) -> String;
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Js {
-    pub items: HashMap<Vec<String>, JsItem>,
+    pub items: HashMap<String, JsItem>,
 }
 
 impl JsElement for Js {
@@ -14,11 +15,12 @@ impl JsElement for Js {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum JsItem {
     Function(JsFunction),
 }
 
-impl JsElement for (&Vec<String>, &JsItem) {
+impl JsElement for (&String, &JsItem) {
     fn code(&self) -> String {
         match &self.1 {
             JsItem::Function(function) => function.code(),
@@ -26,6 +28,7 @@ impl JsElement for (&Vec<String>, &JsItem) {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct JsFunction {
     pub id: String,
     pub arguments: Vec<String>,
@@ -43,6 +46,7 @@ impl JsElement for JsFunction {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum JsStatement {
     Expression(JsExpression),
 }
@@ -55,6 +59,7 @@ impl JsElement for JsStatement {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum JsExpression {
     Literal(JsLiteral),
 }
@@ -67,6 +72,7 @@ impl JsElement for JsExpression {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum JsLiteral {
     Boolean(bool),
     // todo: add JsIntegerLiteral

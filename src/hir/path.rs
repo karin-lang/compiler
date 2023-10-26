@@ -1,9 +1,16 @@
+use std::fmt;
 use std::collections::BTreeMap;
 use super::HirIdentifier;
 
 // fix
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct HirPathIndex(usize);
+
+impl fmt::Display for HirPathIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 impl From<usize> for HirPathIndex {
     fn from(value: usize) -> Self {
