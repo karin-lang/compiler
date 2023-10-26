@@ -18,7 +18,7 @@ pub struct AstModule<'a> {
 pub struct TreeAnalysis {
     path_index_generator: HirPathIndexGenerator,
     pub(crate) path_tree: HirPathTree,
-    pub(crate) items: Vec<HirItem>,
+    pub(crate) items: Vec<HirPathIndexBinding<HirItem>>,
 }
 
 impl TreeAnalysis {
@@ -45,15 +45,11 @@ impl TreeAnalysis {
 
     pub fn hako(&mut self, hako: &AstHako) {
         let path_index = self.path_index_generator.generate();
-        let mut child_items = Vec::new();
         let mut child_path_indexes = Vec::new();
 
         for each_module in &hako.modules {
-            for each_item_node in &each_module.node.children.get_node(0).children.filter_nodes() {
-                child_items.push(self.item(each_item_node));
-            }
-
-            child_path_indexes.push(self.module(each_module, path_index));
+            let module_path_index = self.module(each_module, path_index);
+            child_path_indexes.push(module_path_index);
         }
 
         let path_node = HirPathNode {
@@ -68,13 +64,21 @@ impl TreeAnalysis {
 
     pub fn module(&mut self, module: &AstModule, parent: HirPathIndex) -> HirPathIndex {
         let path_index = self.path_index_generator.generate();
-        let child_path_indexes = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
+        // todo: verify the performance of extend()
+        let mut children = Vec::new();
+
+        let submodules: Vec<HirPathIndex> = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
+        children.extend(submodules);
+
+        let subitems: Vec<HirPathIndex> = module.node.children.filter_nodes().iter()
+            .map(|v| self.item(v, path_index)).collect();
+        children.extend(subitems);
 
         let path_node = HirPathNode {
             id: module.id.clone().into(),
             kind: HirPathKind::Module,
             parent: Some(parent),
-            children: child_path_indexes,
+            children,
         };
 
         self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node);
@@ -97,16 +101,30 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn item(&mut self, node: &SyntaxNode) -> (String, HirItem) {
+    pub fn item(&mut self, node: &SyntaxNode, parent: HirPathIndex) -> HirPathIndex {
+        let path_index = self.path_index_generator.generate();
         let content = node.children.get_node(0);
 
-        match content.name.as_str() {
+        let (path_node, item) = match content.name.as_str() {
             "Function::function" => {
                 let (id, function) = self.function(content);
-                (id, HirItem::Function(function))
+
+                let path_node = HirPathNode {
+                    id: id.clone().into(),
+                    kind: HirPathKind::Function,
+                    parent: Some(parent),
+                    children: Vec::new(),
+                };
+
+                (path_node, HirItem::Function(function))
             },
             _ => unreachable!("unknown item content name"),
-        }
+        };
+
+        self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node);
+        self.items.push(HirPathIndexBinding::new(path_index, item));
+
+        path_index
     }
 
     pub fn function(&mut self, node: &SyntaxNode) -> (String, HirFunction) {

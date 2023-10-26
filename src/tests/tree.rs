@@ -24,17 +24,15 @@ speculate!{
                 hako_indexes: vec![
                     HirPathIndex::from(0),
                 ],
-                nodes: BTreeMap::from([
-                    (
-                        HirPathIndex::from(0),
-                        HirPathNode {
-                            id: "h".into(),
-                            kind: HirPathKind::Hako,
-                            parent: None,
-                            children: Vec::new(),
-                        },
-                    ),
-                ]),
+                nodes: BTreeMap::from([(
+                    HirPathIndex::from(0),
+                    HirPathNode {
+                        id: "h".into(),
+                        kind: HirPathKind::Hako,
+                        parent: None,
+                        children: Vec::new(),
+                    },
+                )]),
             },
         );
 
@@ -42,8 +40,99 @@ speculate!{
     }
 
     describe "module" {
-        it "no children" {
+        it "reflects path indexes for itself and parent" {
             let syntax_child = node!("Main::main" => []);
+            let mut analyzer = new_analyzer();
+
+            let path_index = analyzer.module(
+                &AstModule {
+                    id: "m".to_string(),
+                    node: syntax_child.into_node(),
+                    submodules: Vec::new(),
+                },
+                HirPathIndex::from(100),
+            );
+
+            assert_eq!(path_index, 0.into());
+
+            assert_eq!(
+                analyzer.path_tree,
+                HirPathTree {
+                    hako_indexes: vec![],
+                    nodes: BTreeMap::from([(
+                        HirPathIndex::from(0),
+                        HirPathNode {
+                            id: "m".into(),
+                            kind: HirPathKind::Module,
+                            parent: Some(HirPathIndex::from(100)),
+                            children: Vec::new(),
+                        },
+                    )]),
+                },
+            );
+        }
+
+        it "reflects submodules" {
+            let syntax_child = node!("Main::main" => []);
+            let mut analyzer = new_analyzer();
+
+            analyzer.module(
+                &AstModule {
+                    id: "m".to_string(),
+                    node: syntax_child.into_node(),
+                    submodules: vec![
+                        AstModule {
+                            id: "sm".to_string(),
+                            node: syntax_child.into_node(),
+                            submodules: Vec::new(),
+                        },
+                    ],
+                },
+                HirPathIndex::from(100),
+            );
+
+            assert_eq!(
+                analyzer.path_tree,
+                HirPathTree {
+                    hako_indexes: vec![],
+                    nodes: BTreeMap::from([
+                        (
+                            HirPathIndex::from(0),
+                            HirPathNode {
+                                id: "m".into(),
+                                kind: HirPathKind::Module,
+                                parent: Some(HirPathIndex::from(100)),
+                                children: vec![1.into()],
+                            },
+                        ),
+                        (
+                            HirPathIndex::from(1),
+                            HirPathNode {
+                                id: "sm".into(),
+                                kind: HirPathKind::Module,
+                                parent: Some(HirPathIndex::from(0)),
+                                children: Vec::new(),
+                            },
+                        ),
+                    ]),
+                },
+            );
+        }
+
+        it "reflects subitems" {
+            let syntax_child = node!("Main::main" => [
+                node!("Item::item" => [
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [
+                            leaf!("f"),
+                        ]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ]),
+                ]),
+            ]);
+
             let mut analyzer = new_analyzer();
 
             analyzer.module(
@@ -66,16 +155,36 @@ speculate!{
                                 id: "m".into(),
                                 kind: HirPathKind::Module,
                                 parent: Some(HirPathIndex::from(100)),
+                                children: vec![1.into()],
+                            },
+                        ),
+                        (
+                            HirPathIndex::from(1),
+                            HirPathNode {
+                                id: "f".into(),
+                                kind: HirPathKind::Function,
+                                parent: Some(HirPathIndex::from(0)),
                                 children: Vec::new(),
                             },
-                        )
+                        ),
                     ]),
                 },
             );
 
             assert_eq!(
                 analyzer.items,
-                Vec::new(),
+                vec![
+                    HirPathIndexBinding::new(
+                        1.into(),
+                        HirItem::Function(
+                            HirFunction {
+                                accessibility: HirAccessibility::Private,
+                                arguments: Vec::new(),
+                                expressions: Vec::new(),
+                            },
+                        ),
+                    ),
+                ],
             );
         }
     }
@@ -114,54 +223,92 @@ speculate!{
     }
 
     describe "item" {
-        it "function" {
-            assert_eq!(
-                new_analyzer().function(
+        it "reflects path indexes for itself and parent" {
+            let mut analyzer = new_analyzer();
+
+            let path_index = analyzer.item(
+                node!("Item::item" => [
                     node!("Function::function" => [
                         node!("Main::accessibility" => []),
                         node!("Identifier::identifier" => [
                             leaf!("f"),
                         ]),
-                        node!("args" => [
-                            node!("Function::formal_argument" => [
-                                node!("Identifier::identifier" => [
-                                    leaf!("a"),
-                                ]),
-                                node!("DataType::data_type" => [
-                                    node!("DataType::primitive" => [
-                                        leaf!("usize"),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ]),
+                ]).into_node(),
+                100.into(),
+            );
+
+            assert_eq!(path_index, 0.into());
+
+            assert_eq!(
+                analyzer.path_tree,
+                HirPathTree {
+                    hako_indexes: vec![],
+                    nodes: BTreeMap::from([(
+                        HirPathIndex::from(0),
+                        HirPathNode {
+                            id: "f".into(),
+                            kind: HirPathKind::Function,
+                            parent: Some(HirPathIndex::from(100)),
+                            children: Vec::new(),
+                        },
+                    )]),
+                },
+            );
+        }
+
+        describe "function" {
+            it "reflects accessibility, arguments and expressions" {
+                assert_eq!(
+                    new_analyzer().function(
+                        node!("Function::function" => [
+                            node!("Main::accessibility" => []),
+                            node!("Identifier::identifier" => [
+                                leaf!("f"),
+                            ]),
+                            node!("args" => [
+                                node!("Function::formal_argument" => [
+                                    node!("Identifier::identifier" => [
+                                        leaf!("a"),
+                                    ]),
+                                    node!("DataType::data_type" => [
+                                        node!("DataType::primitive" => [
+                                            leaf!("usize"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
-                        ]),
-                        node!("exprs" => [
-                            node!("Expression::expression" => [
-                                node!("Literal::literal" => [
-                                    node!("Literal::boolean" => [leaf!("true")]),
+                            node!("exprs" => [
+                                node!("Expression::expression" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::boolean" => [leaf!("true")]),
+                                    ]),
                                 ]),
                             ]),
-                        ]),
-                    ]).into_node(),
-                ),
-                (
-                    "f".to_string(),
-                    HirFunction {
-                        accessibility: HirAccessibility::Private,
-                        arguments: vec![
-                            HirIdentifierBinding::new(
-                                "a".into(),
-                                HirFormalArgument {
-                                    mutability: HirMutability::Immutable,
-                                    data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
-                                },
-                            ),
-                        ],
-                        expressions: vec![
-                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                        ],
-                    },
-                ),
-            );
+                        ]).into_node(),
+                    ),
+                    (
+                        "f".to_string(),
+                        HirFunction {
+                            accessibility: HirAccessibility::Private,
+                            arguments: vec![
+                                HirIdentifierBinding::new(
+                                    "a".into(),
+                                    HirFormalArgument {
+                                        mutability: HirMutability::Immutable,
+                                        data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                                    },
+                                ),
+                            ],
+                            expressions: vec![
+                                HirExpression::Literal(HirLiteral::Boolean(true)),
+                            ],
+                        },
+                    ),
+                );
+            }
         }
     }
 

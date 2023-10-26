@@ -18,6 +18,23 @@ impl From<HirPathIndex> for usize {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct HirPathIndexBinding<T>(HirPathIndex, T);
+
+impl<T> HirPathIndexBinding<T> {
+    pub fn new(index: HirPathIndex, value: T) -> HirPathIndexBinding<T> {
+        HirPathIndexBinding(index, value)
+    }
+
+    pub fn index(&self) -> &HirPathIndex {
+        &self.0
+    }
+
+    pub fn value(&self) -> &T {
+        &self.1
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct HirPathIndexGenerator(usize);
 
 impl HirPathIndexGenerator {
