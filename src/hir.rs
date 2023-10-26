@@ -1,6 +1,7 @@
 pub mod expr;
 pub mod item;
 pub mod path;
+pub mod type_check;
 
 use self::{item::*, path::*};
 

@@ -1,4 +1,4 @@
-use crate::syntax::Syntax;
+use crate::ast::syntax::Syntax;
 use colored::*;
 use speculate::speculate;
 use volt::{*, parser::*, rule::*, tree::*};

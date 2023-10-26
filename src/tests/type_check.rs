@@ -1,5 +1,4 @@
-use crate::conv::type_check::*;
-use crate::hir::{*, expr::*, item::*, path::*};
+use crate::hir::{*, expr::*, item::*, path::*, type_check::*};
 use speculate::speculate;
 
 fn check<F: FnMut(&mut DataTypeChecker)>(

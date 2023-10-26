@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use crate::{hir::{*, expr::*, item::*, path::*}, tree::*};
+use crate::{hir::{*, expr::*, item::*, path::*}, ast::tree::*};
 use speculate::speculate;
 use volt::{*, tree::*};
 

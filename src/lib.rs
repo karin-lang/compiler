@@ -1,11 +1,9 @@
-pub mod conv;
 pub mod hir;
-pub mod syntax;
-pub mod tree;
+pub mod ast;
 #[cfg(test)]
 mod tests;
 
-use syntax::Syntax;
+use ast::syntax::Syntax;
 use volt::{rule::RuleId, parser::ParserResult};
 
 pub trait Compiler<Input, Output, Options> {
