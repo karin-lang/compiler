@@ -14,20 +14,3 @@ pub trait Compiler<Input, Output, Options> {
 
     fn parse(&self, input: Input) -> ParserResult;
 }
-
-pub struct JsTranspiler;
-
-impl Compiler<&str, String, ()> for JsTranspiler {
-    fn new(options: ()) -> Self {
-        Self
-    }
-
-    fn compile(&self, input: &str) -> String {
-        unimplemented!();
-    }
-
-    fn parse(&self, input: &str) -> ParserResult {
-        let volt = &mut Syntax::generate_volt(1024);
-        volt.parse(input, &RuleId("Main::main".to_string()))
-    }
-}
