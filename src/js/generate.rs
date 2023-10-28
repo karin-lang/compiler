@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::hir::{*, expr::*, item::*, path::*};
 use crate::js::ir::*;
 
@@ -13,24 +12,18 @@ impl<'a> JsGenerator<'a> {
 
     pub fn generate(hir: &'a Hir) -> Js {
         let mut generator = JsGenerator::new(&hir.path_tree);
-        let mut items = HashMap::new();
-
-        for each_item in &hir.items {
-            items.insert(format!("{}", each_item.index()), generator.item(each_item));
-        }
-
+        let items = hir.items.iter().map(|v| generator.item(v)).collect();
         Js { items }
     }
 
     pub fn item(&mut self, item: &HirPathIndexBinding<HirItem>) -> JsItem {
         let path_index = item.index();
-        let path_node = self.path_tree.get(path_index).expect(&format!("failed to resolve identifier (path index {})", path_index));
 
         match item.value() {
             HirItem::Function(function) => {
                 JsItem::Function(
                     JsFunction {
-                        id: path_node.id.clone().into(),
+                        id: format!("f_{}", path_index),
                         arguments: function.arguments.iter().map(|v| v.identifier().clone().into()).collect(),
                         statements: function.expressions.iter().map(|v| self.statement(v)).collect(),
                     },
