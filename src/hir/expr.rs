@@ -13,6 +13,7 @@ pub enum HirLiteral {
     Boolean(bool),
     Integer(HirIntegerLiteral),
     Float(HirFloatLiteral),
+    String(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -55,6 +56,45 @@ pub enum HirOperation {
     MemberAccess(HirExpression, HirExpression),
     Path(HirPath),
     Group(HirExpression),
+}
+
+pub type HirOperationNew<Operator> = Vec<HirOperationToken<Operator>>;
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirOperationToken<Operator> {
+    Operator(Operator),
+    Term(HirExpression),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirOperator {
+    Substitute,
+    Add,
+    Subtract,
+    Multiply,
+    Negative,
+    Not,
+    BitNot,
+    Nonnize,
+    Propagate,
+    MemberAccess,
+    Path,
+    GroupBegin,
+    GroupEnd,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirOperatorSymbol {
+    Asterisk,
+    Dot,
+    DoubleColon,
+    Exclamation,
+    Minus,
+    LeftParenthesis,
+    RightParenthesis,
+    Plus,
+    Question,
+    Tilde,
 }
 
 #[derive(Clone, Debug, PartialEq)]
