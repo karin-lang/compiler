@@ -67,6 +67,14 @@ pub enum HirOperationToken<Operator> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum HirOperatorFix {
+    Prefix,
+    Infix,
+    Postfix,
+    Parenthesis,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum HirOperator {
     Substitute,
     Add,
@@ -83,11 +91,13 @@ pub enum HirOperator {
     GroupEnd,
 }
 
+// Please modify the match patterns in HirOperatorSymbol::to_operator() when operator symbols changed.
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirOperatorSymbol {
     Asterisk,
     Dot,
     DoubleColon,
+    Equal,
     Exclamation,
     Minus,
     LeftParenthesis,
@@ -95,6 +105,40 @@ pub enum HirOperatorSymbol {
     Plus,
     Question,
     Tilde,
+}
+
+impl HirOperatorSymbol {
+    pub fn to_operator(&self, fix: HirOperatorFix) -> Option<HirOperator> {
+        let operator = match fix {
+            HirOperatorFix::Prefix => match self {
+                HirOperatorSymbol::Exclamation => HirOperator::Not,
+                HirOperatorSymbol::Minus => HirOperator::Negative,
+                HirOperatorSymbol::Tilde => HirOperator::BitNot,
+                _ => return None,
+            },
+            HirOperatorFix::Infix => match self {
+                HirOperatorSymbol::Asterisk => HirOperator::Multiply,
+                HirOperatorSymbol::Dot => HirOperator::MemberAccess,
+                HirOperatorSymbol::DoubleColon => HirOperator::Path,
+                HirOperatorSymbol::Equal => HirOperator::Substitute,
+                HirOperatorSymbol::Minus => HirOperator::Subtract,
+                HirOperatorSymbol::Plus => HirOperator::Add,
+                _ => return None,
+            },
+            HirOperatorFix::Postfix => match self {
+                HirOperatorSymbol::Exclamation => HirOperator::Nonnize,
+                HirOperatorSymbol::Question => HirOperator::Propagate,
+                _ => return None,
+            },
+            HirOperatorFix::Parenthesis => match self {
+                HirOperatorSymbol::LeftParenthesis => HirOperator::GroupBegin,
+                HirOperatorSymbol::RightParenthesis => HirOperator::GroupEnd,
+                _ => return None,
+            },
+        };
+
+        Some(operator)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
