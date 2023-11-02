@@ -1,5 +1,6 @@
 use volt::tree::*;
 use crate::hir::{*, expr::*, item::*, path::*};
+use super::operator::OperationParser;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AstHako<'a> {
@@ -228,7 +229,15 @@ impl TreeAnalysis {
     }
 
     pub fn operation(&mut self, node: &SyntaxNode) -> HirOperation {
-        node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect()
+        let tokens = node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect();
+
+        match OperationParser::parse(tokens) {
+            Ok(v) => v,
+            Err(e) => {
+                // todo: push error
+                Vec::new()
+            },
+        }
     }
 
     pub fn operation_token(&mut self, node: &SyntaxNode) -> HirOperationToken {

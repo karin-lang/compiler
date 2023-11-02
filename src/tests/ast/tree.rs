@@ -424,7 +424,7 @@ speculate!{
     }
 
     describe "operation" {
-        it "converts operators and terms" {
+        it "converts into postfix notation" {
             assert_eq!(
                 new_analyzer().operation(
                     node!("Operation::operation" => [
@@ -455,8 +455,8 @@ speculate!{
                 ),
                 vec![
                     get_integer_term(0),
-                    get_operator(HirOperator::Add),
                     get_integer_term(1),
+                    get_operator(HirOperator::Add),
                 ],
             );
         }
