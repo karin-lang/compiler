@@ -11,16 +11,6 @@ pub enum OperatorPrecedenceMode {
     StackPrecedence,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-enum OperationTokenKind {
-    Initial,
-    Term,
-    PrefixOperator,
-    InfixOperator,
-    PostfixOperator,
-    ParenthesisOperator,
-}
-
 pub struct OperationParser;
 
 impl OperationParser {
