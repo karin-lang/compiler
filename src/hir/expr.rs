@@ -3,7 +3,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirExpression {
     Literal(HirLiteral),
-    Operation(Box<HirOperation>),
+    Operation(Box<HirOperationNew<HirOperator>>),
     DataType(HirDataType),
     Identifier(HirIdentifier),
 }

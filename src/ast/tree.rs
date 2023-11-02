@@ -159,7 +159,7 @@ impl TreeAnalysis {
 
         match content_node.name.as_str() {
             "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
-            "Operation::operation" => self.operation(content_node),
+            "Operation::operation" => HirExpression::Operation(Box::new(self.operation(content_node))),
             "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
             "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node).into()),
             _ => unreachable!("unknown expression"),
@@ -227,85 +227,30 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn operation(&mut self, node: &SyntaxNode) -> HirExpression {
-        let mut elements = node.children.iter();
-        let left = self.construct_prefix_operation(&mut elements);
-        self.construct_outfix_operation(&mut elements, left)
+    pub fn operation(&mut self, node: &SyntaxNode) -> HirOperationNew<HirOperator> {
+        node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect()
     }
 
-    fn operation_term(&mut self, term_node: &SyntaxChild) -> HirExpression {
-        let target = term_node.into_node();
-
-        if target.name == "Expression::operation_term" {
-            self.expression(target)
-        } else {
-            self.operation(target)
+    pub fn operation_token(&mut self, node: &SyntaxNode) -> HirOperationToken<HirOperator> {
+        match node.name.as_ref() {
+            "operator" => HirOperationToken::Operator(self.operator(node)),
+            _ => HirOperationToken::Term(self.expression(node))
         }
     }
 
-    fn construct_prefix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>) -> HirExpression {
-        let first_node = elements.next().expect("expected first operation term or operator");
-
-        let operator = match &first_node {
-            SyntaxChild::Node(_) => return self.operation_term(first_node),
-            SyntaxChild::Leaf(leaf) => leaf.value.as_str(),
-            _ => unreachable!(),
-        };
-
-        let term = self.construct_prefix_operation(elements);
-
-        let operation = match operator {
-            "!e" => HirOperation::Not(term),
-            "~e" => HirOperation::BitNot(term),
-            "-e" => HirOperation::Negative(term),
-            "e!" => HirOperation::Nonnize(term),
-            "e?" => HirOperation::Propagate(term),
-            "(" => HirOperation::Group(term),
-            _ => unreachable!("unknown prefix operator"),
-        };
-
-        HirExpression::Operation(Box::new(operation))
-    }
-
-    fn construct_outfix_operation(&mut self, elements: &mut std::slice::Iter<SyntaxChild>, left: HirExpression) -> HirExpression {
-        let operator = match elements.next() {
-            Some(v) => v.into_leaf().value.as_str(),
-            None => return left,
-        };
-
-        let right = self.operation_term(elements.next().expect("expected right operation term"));
-
-        let new_left = match operator {
-            "+" => HirOperation::Add(left, right),
-            "*" => HirOperation::Multiply(left, right),
-            "." => HirOperation::MemberAccess(left, right),
-            // todo: reject expression grouping
-            "::" => {
-                let mut segments: Vec<HirPathSegment> = vec![self.path_segment(left)];
-
-                match &right {
-                    HirExpression::Operation(operation) => match &**operation {
-                        HirOperation::Path(path) => match &*path {
-                            HirPath::Resolved(_) => unreachable!("path is already resolved"),
-                            HirPath::Unresolved(right_segments) => segments.append(&mut right_segments.clone()),
-                        },
-                        _ => segments.push(self.path_segment(right)),
-                    },
-                    _ => segments.push(self.path_segment(right)),
-                }
-
-                HirOperation::Path(HirPath::Unresolved(segments))
+    pub fn operator(&mut self, node: &SyntaxNode) -> HirOperator {
+        match node.children.get_leaf_or_none(0) {
+            Some(operator_leaf) => match operator_leaf.value.as_ref() {
+                "+" => HirOperator::Add,
+                "-" => HirOperator::Subtract,
+                "*" => HirOperator::Multiply,
+                "!e" => HirOperator::Not,
+                "-e" => HirOperator::Negative,
+                "e!" => HirOperator::Nonnize,
+                "e?" => HirOperator::Propagate,
+                _ => unimplemented!(),
             },
-            _ => unreachable!("unknown operator `{}`", operator),
-        };
-
-        self.construct_outfix_operation(elements, HirExpression::Operation(Box::new(new_left)))
-    }
-
-    pub fn path_segment(&mut self, expr: HirExpression) -> HirPathSegment {
-        match expr {
-            HirExpression::Identifier(id) => id,
-            _ => unimplemented!("DataType and error handling is not implemented"),
+            None => unimplemented!(),
         }
     }
 

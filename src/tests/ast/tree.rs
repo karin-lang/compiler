@@ -6,6 +6,25 @@ use volt::{*, tree::*};
 speculate!{
     before {
         let new_analyzer = || TreeAnalysis::new();
+
+        #[allow(unused)]
+        let get_operator = |operator: HirOperator|
+            HirOperationToken::Operator(operator);
+
+        #[allow(unused)]
+        let get_integer_term = |value: usize|
+            HirOperationToken::<HirOperator>::Term(
+                HirExpression::Literal(
+                    HirLiteral::Integer(
+                        HirIntegerLiteral {
+                            data_type: None,
+                            base: HirIntegerBase::Decimal,
+                            value: value.to_string(),
+                            exponent: None,
+                        },
+                    ),
+                ),
+            );
     }
 
     it "tree" {
@@ -405,275 +424,45 @@ speculate!{
     }
 
     describe "operation" {
-        describe "treat the third element as an operation term" {
-            it "contained term" {
-                assert_eq!(
-                    new_analyzer().operation(
-                        node!("Operation::operation" => [
-                            node!("Expression::operation_term" => [
-                                node!("Literal::literal" => [
-                                    node!("Literal::boolean" => [leaf!("true")]),
-                                ]),
-                            ]),
-                            leaf!("+"),
-                            node!("Operation::arithmetic1" => [
-                                node!("Expression::operation_term" => [
-                                    node!("Literal::literal" => [
-                                        node!("Literal::boolean" => [leaf!("true")]),
-                                    ]),
-                                ]),
-                                leaf!("*"),
-                                node!("Expression::operation_term" => [
-                                    node!("Literal::literal" => [
-                                        node!("Literal::boolean" => [leaf!("true")]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]).into_node(),
-                    ),
-                    HirExpression::Operation(
-                        Box::new(
-                            HirOperation::Add(
-                                HirExpression::Literal(HirLiteral::Boolean(true)),
-                                HirExpression::Operation(
-                                    Box::new(
-                                        HirOperation::Multiply(
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-            }
-        }
-
-        describe "prefix operator" {
-            it "prioritizes the last operator" {
-                assert_eq!(
-                    new_analyzer().operation(
-                        node!("Operation::operation" => [
-                            leaf!("!e"),
-                            leaf!("-e"),
-                            node!("Expression::operation_term" => [
-                                node!("Literal::literal" => [
-                                    node!("Literal::boolean" => [leaf!("true")]),
-                                ]),
-                            ]),
-                        ]).into_node(),
-                    ),
-                    HirExpression::Operation(
-                        Box::new(
-                            HirOperation::Not(
-                                HirExpression::Operation(
-                                    Box::new(
-                                        HirOperation::Negative(
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-            }
-
-            it "treat the last element as an operation term" {
-                assert_eq!(
-                    new_analyzer().operation(
-                        node!("Operation::operation" => [
-                            leaf!("!e"),
-                            node!("Operation::arithmetic1" => [
-                                node!("Expression::operation_term" => [
-                                    node!("Literal::literal" => [
-                                        node!("Literal::boolean" => [leaf!("true")]),
-                                    ]),
-                                ]),
-                                leaf!("+"),
-                                node!("Expression::operation_term" => [
-                                    node!("Literal::literal" => [
-                                        node!("Literal::boolean" => [leaf!("true")]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]).into_node(),
-                    ),
-                    HirExpression::Operation(
-                        Box::new(
-                            HirOperation::Not(
-                                HirExpression::Operation(
-                                    Box::new(
-                                        HirOperation::Add(
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-            }
-        }
-
-        describe "postfix operator" {
-            it "prioritizes the last operator" {
-                assert_eq!(
-                    new_analyzer().operation(
-                        node!("Operation::operation" => [
-                            leaf!("e?"),
-                            leaf!("e!"),
-                            node!("Expression::operation_term" => [
-                                node!("Literal::literal" => [
-                                    node!("Literal::boolean" => [leaf!("true")]),
-                                ]),
-                            ]),
-                        ]).into_node(),
-                    ),
-                    HirExpression::Operation(
-                        Box::new(
-                            HirOperation::Propagate(
-                                HirExpression::Operation(
-                                    Box::new(
-                                        HirOperation::Nonnize(
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-            }
-
-            it "treat the last element as an operation term" {
-                assert_eq!(
-                    new_analyzer().operation(
-                        node!("Operation::operation" => [
-                            leaf!("e!"),
-                            node!("Operation::arithmetic1" => [
-                                node!("Expression::operation_term" => [
-                                    node!("Literal::literal" => [
-                                        node!("Literal::boolean" => [leaf!("true")]),
-                                    ]),
-                                ]),
-                                leaf!("+"),
-                                node!("Expression::operation_term" => [
-                                    node!("Literal::literal" => [
-                                        node!("Literal::boolean" => [leaf!("true")]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]).into_node(),
-                    ),
-                    HirExpression::Operation(
-                        Box::new(
-                            HirOperation::Nonnize(
-                                HirExpression::Operation(
-                                    Box::new(
-                                        HirOperation::Add(
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                );
-            }
-        }
-
-        it "addition" {
+        it "converts operators and terms" {
             assert_eq!(
                 new_analyzer().operation(
                     node!("Operation::operation" => [
-                        node!("Expression::operation_term" => [
+                        node!("Expression::pure_expression" => [
                             node!("Literal::literal" => [
-                                node!("Literal::boolean" => [leaf!("true")]),
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
                             ]),
                         ]),
-                        leaf!("+"),
-                        node!("Expression::operation_term" => [
+                        node!("operator" => [leaf!("+")]),
+                        node!("Expression::pure_expression" => [
                             node!("Literal::literal" => [
-                                node!("Literal::boolean" => [leaf!("true")]),
-                            ]),
-                        ]),
-                        leaf!("+"),
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::boolean" => [leaf!("true")]),
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("1"),
+                                        ]),
+                                    ]),
+                                ]),
                             ]),
                         ]),
                     ]).into_node(),
                 ),
-                HirExpression::Operation(
-                    Box::new(
-                        HirOperation::Add(
-                            HirExpression::Operation(
-                                Box::new(
-                                    HirOperation::Add(
-                                        HirExpression::Literal(HirLiteral::Boolean(true)),
-                                        HirExpression::Literal(HirLiteral::Boolean(true)),
-                                    ),
-                                ),
-                            ),
-                            HirExpression::Literal(HirLiteral::Boolean(true)),
-                        ),
-                    ),
-                ),
+                vec![
+                    get_integer_term(0),
+                    get_operator(HirOperator::Add),
+                    get_integer_term(1),
+                ],
             );
         }
 
-        it "path resolution" {
-            assert_eq!(
-                new_analyzer().operation(
-                    node!("Operation::operation" => [
-                        node!("Expression::operation_term" => [
-                            node!("Identifier::identifier" => [leaf!("a")]),
-                        ]),
-                        leaf!("::"),
-                        node!("Operation::arithmetic1" => [
-                            node!("Expression::operation_term" => [
-                                node!("Identifier::identifier" => [leaf!("b")]),
-                            ]),
-                            leaf!("::"),
-                            node!("Expression::operation_term" => [
-                                node!("Identifier::identifier" => [leaf!("c")]),
-                            ]),
-                        ]),
-                    ]).into_node(),
-                ),
-                HirExpression::Operation(
-                    Box::new(
-                        HirOperation::Path(HirPath::Unresolved(vec![
-                            "a".into(),
-                            "b".into(),
-                            "c".into(),
-                        ])),
-                    ),
-                )
-            );
-        }
-
-        it "grouping" {
-            assert_eq!(
-                new_analyzer().operation(
-                    node!("Operation::operation" => [
-                        leaf!("("),
-                        node!("Expression::operation_term" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::boolean" => [leaf!("true")]),
-                            ]),
-                        ]),
-                    ]).into_node(),
-                ),
-                HirExpression::Operation(
-                    Box::new(HirOperation::Group(HirExpression::Literal(HirLiteral::Boolean(true)))),
-                )
-            );
+        describe "operator" {
+            // todo: add operators includes function call
         }
     }
 
