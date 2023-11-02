@@ -103,7 +103,7 @@ impl VoltModule for Function {
 #[derive(VoltModuleDefinition)]
 struct Expression {
     expression: Element,
-    operation_term: Element,
+    pure_expression: Element,
 }
 
 impl VoltModule for Expression {
@@ -119,11 +119,7 @@ impl VoltModule for Expression {
 
             if expose {
                 if let SyntaxChild::Node(mut node) = children.pop().unwrap() {
-                    if let SyntaxChild::Node(mut node) = node.children.pop().unwrap() {
-                        vec![node.children.pop().unwrap()]
-                    } else {
-                        unreachable!();
-                    }
+                    vec![node.children.pop().unwrap()]
                 } else {
                     unreachable!();
                 }
@@ -134,7 +130,7 @@ impl VoltModule for Expression {
 
         define_rules!{
             expression := Operation::operation().reduce(expression_reducer);
-            operation_term := choice![
+            pure_expression := choice![
                 Literal::literal(),
                 DataType::data_type(),
                 Identifier::identifier(),
@@ -302,118 +298,50 @@ impl VoltModule for Literal {
 #[derive(VoltModuleDefinition)]
 struct Operation {
     operation: Element,
-    arithmetic1: Element,
-    arithmetic2: Element,
-    prefix: Element,
-    postfix: Element,
-    member_access: Element,
-    path_resolution: Element,
-    grouping: Element,
+    term: Element,
+    infix: Element,
+    group: Element,
+    prefix_operator: Element,
+    postfix_operator: Element,
+    infix_operator: Element,
 }
 
 impl VoltModule for Operation {
     fn new() -> Self {
-        let term_optimization_reducer = |mut children: Vec<SyntaxChild>| {
-            let expose = {
-                if children.len() == 1 {
-                    if let Some(SyntaxChild::Node(node)) = children.get(0) {
-                        node.children.len() == 1
-                    } else {
-                        false
-                    }
-                } else {
-                    unreachable!("not compatible with term optimization reducer");
-                }
-            };
-
-            if expose {
-                if let SyntaxChild::Node(mut node) = children.pop().unwrap() {
-                    vec![node.children.pop().unwrap()]
-                } else {
-                    unreachable!();
-                }
-            } else {
-                children
-            }
-        };
-
-        let reverse_reducer = |mut children: Vec<SyntaxChild>| {
-            children.reverse();
-            children
-        };
-
-        let prefix_indication_reducer = |children: Vec<SyntaxChild>| {
-            children.iter().map(|v| {
-                if let SyntaxChild::Leaf(leaf) = v {
-                    SyntaxChild::leaf(leaf.start.clone(), format!("{}e", leaf.value))
-                } else {
-                    unreachable!("expected prefix operator leaf");
-                }
-            }).collect()
-        };
-
-        let postfix_indication_reducer = |children: Vec<SyntaxChild>| {
-            children.iter().map(|v| {
-                if let SyntaxChild::Leaf(leaf) = v {
-                    SyntaxChild::leaf(leaf.start.clone(), format!("e{}", leaf.value))
-                } else {
-                    unreachable!("expected prefix operator leaf");
-                }
-            }).collect()
-        };
-
-        let separate_times = LoopRange::min(1);
-
-        // Don't hide operators to distinguish them and recognize exposed element in expression reducer.
         define_rules!{
-            operation := Operation::arithmetic1().expand_once();
-            arithmetic1 := choice![
-                Operation::arithmetic2()
-                    .reduce(term_optimization_reducer)
-                    .separate_times(seq![WHITESPACE(), choice![str("+"), str("-")], WHITESPACE()], separate_times),
-                Operation::arithmetic2().expand_once(),
+            operation := choice![
+                Operation::infix().expand_once(),
+                Operation::term().expand_once(),
             ];
-            arithmetic2 := choice![
-                Operation::prefix()
-                    .reduce(term_optimization_reducer)
-                    .separate_times(seq![WHITESPACE(), choice![str("*"), str("/")], WHITESPACE()], separate_times),
-                Operation::prefix().expand_once(),
-            ];
-            prefix := choice![
-                seq![
-                    choice![str("!"), str("~"), str("-")].min(1).reduce(prefix_indication_reducer), WHITESPACE(),
-                    Operation::postfix().reduce(term_optimization_reducer),
+            term := seq![
+                Operation::prefix_operator().expand_once().group("operator").min(0),
+                WHITESPACE(),
+                choice![
+                    Operation::group().expand_once(),
+                    Expression::pure_expression().expand_once(),
                 ],
-                Operation::postfix().expand_once(),
+                WHITESPACE(),
+                Operation::postfix_operator().expand_once().group("operator").min(0),
             ];
-            postfix := choice![
-                // Reverse the order of children to unify outfix operator conversion.
+            infix := seq![
+                Operation::term().expand_once(),
                 seq![
-                    Operation::member_access().reduce(term_optimization_reducer), WHITESPACE(),
-                    choice![str("!"), str("?")].min(1).reduce(postfix_indication_reducer),
-                ].reduce(reverse_reducer),
-                Operation::member_access().expand_once(),
+                    WHITESPACE(),
+                    Operation::infix_operator().expand_once().group("operator"),
+                    WHITESPACE(),
+                    Operation::term().expand_once(),
+                ].min(1),
             ];
-            member_access := choice![
-                Operation::path_resolution()
-                    .reduce(term_optimization_reducer)
-                    .separate_times(seq![WHITESPACE(), str("."), WHITESPACE()], separate_times),
-                Operation::path_resolution().expand_once(),
+            group := seq![
+                str("(").group("operator"),
+                WHITESPACE(),
+                Operation::term().expand_once(),
+                WHITESPACE(),
+                str(")").group("operator"),
             ];
-            path_resolution := choice![
-                Operation::grouping()
-                    .reduce(term_optimization_reducer)
-                    .separate_times(seq![WHITESPACE(), str("::"), WHITESPACE()], separate_times),
-                Operation::grouping().expand_once(),
-            ];
-            grouping := choice![
-                seq![
-                    str("("), WHITESPACE(),
-                    Expression::operation_term(), WHITESPACE(),
-                    str(")").hide(),
-                ],
-                Expression::operation_term(),
-            ];
+            prefix_operator := choice![str("!"), str("-")];
+            postfix_operator := choice![str("!"), str("?")];
+            infix_operator := choice![str("+"), str("-"), str("*"), str("/")];
         }
     }
 }
