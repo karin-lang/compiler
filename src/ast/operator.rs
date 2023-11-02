@@ -3,9 +3,7 @@ use crate::hir::expr::*;
 pub type OperationParserResult<T> = Result<T, OperationParserError>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum OperationParserError {
-    UnknownOperatorAtThisPosition(HirOperatorSymbol),
-}
+pub enum OperationParserError {}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum OperatorPrecedenceMode {
@@ -26,11 +24,6 @@ enum OperationTokenKind {
 pub struct OperationParser;
 
 impl OperationParser {
-    pub fn parse(input: HirOperationNew<HirOperatorSymbol>) -> OperationParserResult<HirOperationNew<HirOperator>> {
-        let fixed = OperationParser::fix_operators(input)?;
-        Ok(OperationParser::into_postfix_notation(fixed))
-    }
-
     // 入力のtopとスタックのtopの優先度を比較する
     // 　入力側の優先度が高い：入力→スタック送り
     // 　スタック側の優先度が高い：スタック→出力送り
@@ -38,7 +31,7 @@ impl OperationParser {
     //   ※数値/IDの場合は必ずスタック送りなので入力→スタック送りして最適化
     // ※前置/中置/後置で重複した記号の演算子に注意（事前に演算子の位置を判断して分類する）
     // 比較が不可能なケースのエラーも実装
-    pub fn into_postfix_notation(mut input: HirOperationNew<HirOperator>) -> HirOperationNew<HirOperator> {
+    pub fn parse(mut input: HirOperation) -> OperationParserResult<HirOperation> {
         input.reverse();
         let mut stack = Vec::new();
         let mut output = Vec::new();
@@ -49,7 +42,7 @@ impl OperationParser {
 
             // Finish when consumed all tokens.
             if next_input.is_none() && next_stack.is_none() {
-                break output;
+                break Ok(output);
             }
 
             let input_precedence = match next_input {
@@ -106,60 +99,5 @@ impl OperationParser {
             HirOperator::GroupEnd if is_stack_mode => unreachable!(),
             _ => unimplemented!(),
         }
-    }
-
-    pub fn fix_operators(input: HirOperationNew<HirOperatorSymbol>) -> OperationParserResult<HirOperationNew<HirOperator>> {
-        let mut output = Vec::new();
-        let mut latest_token_kind = OperationTokenKind::Initial;
-
-        for each_token in input {
-            // term parsing
-            let operator_symbol = match each_token {
-                HirOperationToken::Operator(operator) => operator,
-                HirOperationToken::Term(term) => {
-                    latest_token_kind = OperationTokenKind::Term;
-                    output.push(HirOperationToken::Term(term));
-                    continue;
-                },
-            };
-
-            // parenthesis operator parsing
-            if let Some(operator) = operator_symbol.to_operator(HirOperatorFix::Parenthesis) {
-                latest_token_kind = OperationTokenKind::ParenthesisOperator;
-                output.push(HirOperationToken::Operator(operator));
-                continue;
-            }
-
-            // prefix operator parsing
-            if latest_token_kind == OperationTokenKind::Initial || latest_token_kind == OperationTokenKind::InfixOperator || latest_token_kind == OperationTokenKind::ParenthesisOperator {
-                if let Some(operator) = operator_symbol.to_operator(HirOperatorFix::Prefix) {
-                    latest_token_kind = OperationTokenKind::PrefixOperator;
-                    output.push(HirOperationToken::Operator(operator));
-                    continue;
-                }
-            }
-
-            // infix operator parsing
-            if latest_token_kind == OperationTokenKind::Term || latest_token_kind == OperationTokenKind::PostfixOperator || latest_token_kind == OperationTokenKind::ParenthesisOperator {
-                if let Some(operator) = operator_symbol.to_operator(HirOperatorFix::Infix) {
-                    latest_token_kind = OperationTokenKind::InfixOperator;
-                    output.push(HirOperationToken::Operator(operator));
-                    continue;
-                }
-            }
-
-            // postfix operator parsing
-            if latest_token_kind == OperationTokenKind::Term || latest_token_kind == OperationTokenKind::PostfixOperator || latest_token_kind == OperationTokenKind::ParenthesisOperator {
-                if let Some(operator) = operator_symbol.to_operator(HirOperatorFix::Postfix) {
-                    latest_token_kind = OperationTokenKind::PostfixOperator;
-                    output.push(HirOperationToken::Operator(operator));
-                    continue;
-                }
-            }
-
-            return Err(OperationParserError::UnknownOperatorAtThisPosition(operator_symbol));
-        }
-
-        Ok(output)
     }
 }

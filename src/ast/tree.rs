@@ -227,11 +227,11 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn operation(&mut self, node: &SyntaxNode) -> HirOperationNew<HirOperator> {
+    pub fn operation(&mut self, node: &SyntaxNode) -> HirOperation {
         node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect()
     }
 
-    pub fn operation_token(&mut self, node: &SyntaxNode) -> HirOperationToken<HirOperator> {
+    pub fn operation_token(&mut self, node: &SyntaxNode) -> HirOperationToken {
         match node.name.as_ref() {
             "operator" => HirOperationToken::Operator(self.operator(node)),
             _ => HirOperationToken::Term(self.expression(node))

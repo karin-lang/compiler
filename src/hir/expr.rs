@@ -3,7 +3,7 @@ use super::*;
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirExpression {
     Literal(HirLiteral),
-    Operation(Box<HirOperationNew<HirOperator>>),
+    Operation(Box<HirOperation>),
     DataType(HirDataType),
     Identifier(HirIdentifier),
 }
@@ -44,34 +44,12 @@ pub struct HirFloatLiteral {
     pub value: String,
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirOperation {
-    Add(HirExpression, HirExpression),
-    Multiply(HirExpression, HirExpression),
-    Negative(HirExpression),
-    Not(HirExpression),
-    BitNot(HirExpression),
-    Nonnize(HirExpression),
-    Propagate(HirExpression),
-    MemberAccess(HirExpression, HirExpression),
-    Path(HirPath),
-    Group(HirExpression),
-}
-
-pub type HirOperationNew<Operator> = Vec<HirOperationToken<Operator>>;
+pub type HirOperation = Vec<HirOperationToken>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum HirOperationToken<Operator> {
-    Operator(Operator),
+pub enum HirOperationToken {
+    Operator(HirOperator),
     Term(HirExpression),
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirOperatorFix {
-    Prefix,
-    Infix,
-    Postfix,
-    Parenthesis,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -89,56 +67,6 @@ pub enum HirOperator {
     Path,
     GroupBegin,
     GroupEnd,
-}
-
-// Please modify the match patterns in HirOperatorSymbol::to_operator() when operator symbols changed.
-#[derive(Clone, Debug, PartialEq)]
-pub enum HirOperatorSymbol {
-    Asterisk,
-    Dot,
-    DoubleColon,
-    Equal,
-    Exclamation,
-    Minus,
-    LeftParenthesis,
-    RightParenthesis,
-    Plus,
-    Question,
-    Tilde,
-}
-
-impl HirOperatorSymbol {
-    pub fn to_operator(&self, fix: HirOperatorFix) -> Option<HirOperator> {
-        let operator = match fix {
-            HirOperatorFix::Prefix => match self {
-                HirOperatorSymbol::Exclamation => HirOperator::Not,
-                HirOperatorSymbol::Minus => HirOperator::Negative,
-                HirOperatorSymbol::Tilde => HirOperator::BitNot,
-                _ => return None,
-            },
-            HirOperatorFix::Infix => match self {
-                HirOperatorSymbol::Asterisk => HirOperator::Multiply,
-                HirOperatorSymbol::Dot => HirOperator::MemberAccess,
-                HirOperatorSymbol::DoubleColon => HirOperator::Path,
-                HirOperatorSymbol::Equal => HirOperator::Substitute,
-                HirOperatorSymbol::Minus => HirOperator::Subtract,
-                HirOperatorSymbol::Plus => HirOperator::Add,
-                _ => return None,
-            },
-            HirOperatorFix::Postfix => match self {
-                HirOperatorSymbol::Exclamation => HirOperator::Nonnize,
-                HirOperatorSymbol::Question => HirOperator::Propagate,
-                _ => return None,
-            },
-            HirOperatorFix::Parenthesis => match self {
-                HirOperatorSymbol::LeftParenthesis => HirOperator::GroupBegin,
-                HirOperatorSymbol::RightParenthesis => HirOperator::GroupEnd,
-                _ => return None,
-            },
-        };
-
-        Some(operator)
-    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

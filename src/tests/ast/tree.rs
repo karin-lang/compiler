@@ -13,7 +13,7 @@ speculate!{
 
         #[allow(unused)]
         let get_integer_term = |value: usize|
-            HirOperationToken::<HirOperator>::Term(
+            HirOperationToken::Term(
                 HirExpression::Literal(
                     HirLiteral::Integer(
                         HirIntegerLiteral {
