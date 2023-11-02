@@ -763,21 +763,25 @@ speculate!{
             it "accepts two or more terms" {
                 expect_success_eq("0 + 1", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
                         node!("operator" => [leaf!("+")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("1"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("1"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -787,31 +791,37 @@ speculate!{
 
                 expect_success_eq("0 + 1 + 2", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
                         node!("operator" => [leaf!("+")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("1"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("1"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
                         node!("operator" => [leaf!("+")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("2"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("2"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -823,22 +833,26 @@ speculate!{
             it "accepts group as term" {
                 expect_success_eq("0 + (1)", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
                         node!("operator" => [leaf!("+")]),
                         node!("operator" => [leaf!("(")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("1"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("1"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -854,11 +868,13 @@ speculate!{
                 expect_success_eq("!0", "Operation::operation", tree!(
                     node!("Operation::operation" => [
                         node!("operator" => [leaf!("!e")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -870,11 +886,13 @@ speculate!{
                     node!("Operation::operation" => [
                         node!("operator" => [leaf!("!e")]),
                         node!("operator" => [leaf!("-e")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -884,11 +902,13 @@ speculate!{
 
                 expect_success_eq("0?", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -899,11 +919,13 @@ speculate!{
 
                 expect_success_eq("0?!", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -919,11 +941,13 @@ speculate!{
                     node!("Operation::operation" => [
                         node!("operator" => [leaf!("!e")]),
                         node!("operator" => [leaf!("(")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),
@@ -940,11 +964,13 @@ speculate!{
                 expect_success_eq("(0)", "Operation::operation", tree!(
                     node!("Operation::operation" => [
                         node!("operator" => [leaf!("(")]),
-                        node!("Literal::literal" => [
-                            node!("Literal::number" => [
-                                node!("value" => [
-                                    node!("Literal::decimal_number" => [
-                                        leaf!("0"),
+                        node!("Expression::pure_expression" => [
+                            node!("Literal::literal" => [
+                                node!("Literal::number" => [
+                                    node!("value" => [
+                                        node!("Literal::decimal_number" => [
+                                            leaf!("0"),
+                                        ]),
                                     ]),
                                 ]),
                             ]),

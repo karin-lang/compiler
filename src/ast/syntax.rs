@@ -119,7 +119,7 @@ impl VoltModule for Expression {
 
             if expose {
                 if let SyntaxChild::Node(mut node) = children.pop().unwrap() {
-                    vec![node.children.pop().unwrap()]
+                    vec![node.children.pop().unwrap().into_node().children.to_owned().pop().unwrap()]
                 } else {
                     unreachable!();
                 }
@@ -318,7 +318,7 @@ impl VoltModule for Operation {
                 WHITESPACE(),
                 choice![
                     Operation::group().expand_once(),
-                    Expression::pure_expression().expand_once(),
+                    Expression::pure_expression(),
                 ],
                 WHITESPACE(),
                 Operation::postfix_operator().expand_once().group("operator").min(0),
