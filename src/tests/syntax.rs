@@ -853,7 +853,7 @@ speculate!{
             it "accepts zero or more operators" {
                 expect_success_eq("!0", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("operator" => [leaf!("!")]),
+                        node!("operator" => [leaf!("!e")]),
                         node!("Literal::literal" => [
                             node!("Literal::number" => [
                                 node!("value" => [
@@ -868,8 +868,8 @@ speculate!{
 
                 expect_success_eq("!-0", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("operator" => [leaf!("!")]),
-                        node!("operator" => [leaf!("-")]),
+                        node!("operator" => [leaf!("!e")]),
+                        node!("operator" => [leaf!("-e")]),
                         node!("Literal::literal" => [
                             node!("Literal::number" => [
                                 node!("value" => [
@@ -893,7 +893,7 @@ speculate!{
                                 ]),
                             ]),
                         ]),
-                        node!("operator" => [leaf!("?")]),
+                        node!("operator" => [leaf!("e?")]),
                     ])
                 ));
 
@@ -908,8 +908,8 @@ speculate!{
                                 ]),
                             ]),
                         ]),
-                        node!("operator" => [leaf!("?")]),
-                        node!("operator" => [leaf!("!")]),
+                        node!("operator" => [leaf!("e?")]),
+                        node!("operator" => [leaf!("e!")]),
                     ])
                 ));
             }
@@ -917,7 +917,7 @@ speculate!{
             it "accepts prefix/postfix operator around group term" {
                 expect_success_eq("!(0)?", "Operation::operation", tree!(
                     node!("Operation::operation" => [
-                        node!("operator" => [leaf!("!")]),
+                        node!("operator" => [leaf!("!e")]),
                         node!("operator" => [leaf!("(")]),
                         node!("Literal::literal" => [
                             node!("Literal::number" => [
@@ -929,7 +929,7 @@ speculate!{
                             ]),
                         ]),
                         node!("operator" => [leaf!(")")]),
-                        node!("operator" => [leaf!("?")]),
+                        node!("operator" => [leaf!("e?")]),
                     ])
                 ));
             }

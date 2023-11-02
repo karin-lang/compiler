@@ -339,8 +339,20 @@ impl VoltModule for Operation {
                 WHITESPACE(),
                 str(")").group("operator"),
             ];
-            prefix_operator := choice![str("!"), str("-")];
-            postfix_operator := choice![str("!"), str("?")];
+            prefix_operator := choice![str("!"), str("-")].reduce(|mut v| match v.pop().unwrap() {
+                SyntaxChild::Leaf(mut leaf) => {
+                    leaf.set_value(format!("{}e", leaf.value));
+                    vec![SyntaxChild::Leaf(leaf)]
+                },
+                _ => unreachable!(),
+            });
+            postfix_operator := choice![str("!"), str("?")].reduce(|mut v| match v.pop().unwrap() {
+                SyntaxChild::Leaf(mut leaf) => {
+                    leaf.set_value(format!("e{}", leaf.value));
+                    vec![SyntaxChild::Leaf(leaf)]
+                },
+                _ => unreachable!(),
+            });
             infix_operator := choice![str("+"), str("-"), str("*"), str("/")];
         }
     }
