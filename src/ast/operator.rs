@@ -169,12 +169,23 @@ impl OperationParser {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
                         (index, HirOperation::Add(left, right))
                     },
+                    HirOperator::Subtract => {
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        (index, HirOperation::Subtract(left, right))
+                    },
                     HirOperator::Multiply => {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
                         (index, HirOperation::Multiply(left, right))
                     },
                     HirOperator::Not => (token_index as usize, HirOperation::Not(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::BitNot => (token_index as usize, HirOperation::BitNot(pop_term_or_output(&mut stack, output)?.value())),
                     HirOperator::Negative => (token_index as usize, HirOperation::Negative(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::Nonnize => (token_index as usize, HirOperation::Nonnize(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::Propagate => (token_index as usize, HirOperation::Propagate(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::MemberAccess => {
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        (index, HirOperation::MemberAccess(left, right))
+                    },
                     HirOperator::Path => {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
 
@@ -199,7 +210,8 @@ impl OperationParser {
 
                         (index, HirOperation::Path(HirPath::Unresolved(segments)))
                     },
-                    _ => unimplemented!(),
+                    HirOperator::GroupBegin => (token_index as usize, HirOperation::Group(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::GroupEnd => continue,
                 },
                 HirOperationToken::Term(term) => {
                     stack.push(IndexedToken::new(token_index as usize, term));

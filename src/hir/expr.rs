@@ -48,10 +48,16 @@ pub struct HirFloatLiteral {
 pub enum HirOperation {
     Substitute(HirExpression, HirExpression),
     Add(HirExpression, HirExpression),
+    Subtract(HirExpression, HirExpression),
     Multiply(HirExpression, HirExpression),
     Not(HirExpression),
+    BitNot(HirExpression),
     Negative(HirExpression),
+    Nonnize(HirExpression),
+    Propagate(HirExpression),
+    MemberAccess(HirExpression, HirExpression),
     Path(HirPath),
+    Group(HirExpression),
 }
 
 pub type HirOperationSequence = Vec<HirOperationToken>;

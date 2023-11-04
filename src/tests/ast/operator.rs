@@ -418,7 +418,49 @@ speculate!{
     }
 
     describe "expression constructor" {
-        describe "infix operator" {
+        describe "one term operator" {
+            it "consumes only one term" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_operator(HirOperator::Not),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Not(
+                        get_string_expression("a"),
+                    )))),
+                );
+            }
+
+            it "maintains the associativity of operator" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_operator(HirOperator::Not),
+                        get_operator(HirOperator::Negative),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Negative(
+                        HirExpression::Operation(Box::new(HirOperation::Not(
+                            get_string_expression("a"),
+                        )))
+                    )))),
+                );
+            }
+
+            it "skips group end operator" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_operator(HirOperator::GroupBegin),
+                        get_operator(HirOperator::GroupEnd),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Group(
+                        get_string_expression("a"),
+                    )))),
+                );
+            }
+        }
+
+        describe "two term operator" {
             it "maintains the order of terms" {
                 assert_eq!(
                     OperationParser::construct_expression(vec![
@@ -470,37 +512,38 @@ speculate!{
             }
         }
 
-        describe "prefix/postfix operator" {
-            it "consumes only one term" {
+        describe "multiple kinds of operator" {
+            it "maintains the order of terms and the associativity of operator" {
+                // operation: !(a + b)? * c
                 assert_eq!(
+                    // left: a b + () ? ! c *
                     OperationParser::construct_expression(vec![
                         get_string_term("a"),
+                        get_string_term("b"),
+                        get_operator(HirOperator::Add),
+                        get_operator(HirOperator::GroupBegin),
+                        get_operator(HirOperator::GroupEnd),
+                        get_operator(HirOperator::Propagate),
                         get_operator(HirOperator::Not),
+                        get_string_term("c"),
+                        get_operator(HirOperator::Multiply),
                     ]),
-                    Ok(HirExpression::Operation(Box::new(HirOperation::Not(
-                        get_string_expression("a"),
-                    )))),
-                );
-            }
-
-            it "maintains the associativity of operator" {
-                assert_eq!(
-                    OperationParser::construct_expression(vec![
-                        get_string_term("a"),
-                        get_operator(HirOperator::Not),
-                        get_operator(HirOperator::Negative),
-                    ]),
-                    Ok(HirExpression::Operation(Box::new(HirOperation::Negative(
+                    // right: Multiply(Not(Propagate(Group(Add(a, b)))), c)
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Multiply(
                         HirExpression::Operation(Box::new(HirOperation::Not(
-                            get_string_expression("a"),
-                        )))
+                            HirExpression::Operation(Box::new(HirOperation::Propagate(
+                                HirExpression::Operation(Box::new(HirOperation::Group(
+                                    HirExpression::Operation(Box::new(HirOperation::Add(
+                                        get_string_expression("a"),
+                                        get_string_expression("b"),
+                                    ))),
+                                ))),
+                            ))),
+                        ))),
+                        get_string_expression("c"),
                     )))),
                 );
             }
         }
-
-        describe "group operator" {}
-
-        describe "multiple kinds of operator" {}
     }
 }
