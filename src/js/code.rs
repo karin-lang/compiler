@@ -31,6 +31,7 @@ impl JsCodeGenerator {
     pub fn expression(expression: &JsExpression) -> String {
         match expression {
             JsExpression::Literal(literal) => JsCodeGenerator::literal(literal),
+            JsExpression::Operation(operation) => JsCodeGenerator::operation(operation),
         }
     }
 
@@ -38,6 +39,19 @@ impl JsCodeGenerator {
         match literal {
             JsLiteral::Boolean(boolean) => boolean.to_string(),
             JsLiteral::Integer(integer) => integer.to_string(),
+        }
+    }
+
+    pub fn operation(operation: &JsOperation) -> String {
+        match operation {
+            JsOperation::Add(left, right) => format!("{}+{}", JsCodeGenerator::expression(left), JsCodeGenerator::expression(right)),
+            JsOperation::Subtract(left, right) => format!("{}-{}", JsCodeGenerator::expression(left), JsCodeGenerator::expression(right)),
+            JsOperation::Multiply(left, right) => format!("{}*{}", JsCodeGenerator::expression(left), JsCodeGenerator::expression(right)),
+            JsOperation::Not(term) => format!("!{}", JsCodeGenerator::expression(term)),
+            JsOperation::BitNot(term) => format!("~{}", JsCodeGenerator::expression(term)),
+            JsOperation::Negative(term) => format!("-{}", JsCodeGenerator::expression(term)),
+            JsOperation::MemberAccess(left, right) => format!("{}.{}", JsCodeGenerator::expression(left), JsCodeGenerator::expression(right)),
+            JsOperation::Group(term) => format!("({})", JsCodeGenerator::expression(term)),
         }
     }
 }

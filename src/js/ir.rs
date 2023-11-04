@@ -20,14 +20,37 @@ pub enum JsStatement {
     Expression(JsExpression),
 }
 
+impl Into<JsExpression> for JsStatement {
+    fn into(self) -> JsExpression {
+        if let JsStatement::Expression(expr) = self {
+            expr
+        } else {
+            unreachable!("expected js expression");
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsExpression {
     Literal(JsLiteral),
+    Operation(Box<JsOperation>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum JsLiteral {
     Boolean(bool),
     // todo: add JsIntegerLiteral
-    Integer(u64),
+    Integer(String),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum JsOperation {
+    Add(JsExpression, JsExpression),
+    Subtract(JsExpression, JsExpression),
+    Multiply(JsExpression, JsExpression),
+    Not(JsExpression),
+    BitNot(JsExpression),
+    Negative(JsExpression),
+    MemberAccess(JsExpression, JsExpression),
+    Group(JsExpression),
 }
