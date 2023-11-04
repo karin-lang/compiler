@@ -233,7 +233,7 @@ impl TreeAnalysis {
 
         match OperationParser::parse(tokens) {
             Ok(v) => v,
-            Err(e) => unimplemented!(),
+            Err(e) => unimplemented!("{:?}", e),
         }
     }
 
@@ -247,13 +247,19 @@ impl TreeAnalysis {
     pub fn operator(&mut self, node: &SyntaxNode) -> HirOperator {
         match node.children.get_leaf_or_none(0) {
             Some(operator_leaf) => match operator_leaf.value.as_ref() {
+                "=" => HirOperator::Substitute,
                 "+" => HirOperator::Add,
                 "-" => HirOperator::Subtract,
                 "*" => HirOperator::Multiply,
                 "!e" => HirOperator::Not,
+                "~e" => HirOperator::BitNot,
                 "-e" => HirOperator::Negative,
                 "e!" => HirOperator::Nonnize,
                 "e?" => HirOperator::Propagate,
+                "." => HirOperator::MemberAccess,
+                "::" => HirOperator::Path,
+                "(" => HirOperator::GroupBegin,
+                ")" => HirOperator::GroupEnd,
                 _ => unimplemented!(),
             },
             None => unimplemented!(),
