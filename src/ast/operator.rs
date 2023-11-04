@@ -124,6 +124,14 @@ impl OperationParser {
             None => Err(OperationParserError::InvalidLengthOfTerm),
         };
 
+        let pop_term_or_output = |stack: &mut Vec<IndexedToken<HirExpression>>, output: Option<IndexedToken<HirExpression>>| match stack.pop() {
+            Some(v) => Ok(v),
+            None => match output {
+                Some(v) => Ok(v),
+                None => Err(OperationParserError::InvalidLengthOfTerm),
+            },
+        };
+
         let pop_two_terms = |operator_index: i32, stack: &mut Vec<IndexedToken<HirExpression>>, output: Option<IndexedToken<HirExpression>>| {
             // 左右順でindexを考慮する
             let indexed_terms = match output {
@@ -165,6 +173,8 @@ impl OperationParser {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
                         (index, HirOperation::Multiply(left, right))
                     },
+                    HirOperator::Not => (token_index as usize, HirOperation::Not(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::Negative => (token_index as usize, HirOperation::Negative(pop_term_or_output(&mut stack, output)?.value())),
                     HirOperator::Path => {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
 

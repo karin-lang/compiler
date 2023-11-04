@@ -49,6 +49,8 @@ pub enum HirOperation {
     Substitute(HirExpression, HirExpression),
     Add(HirExpression, HirExpression),
     Multiply(HirExpression, HirExpression),
+    Not(HirExpression),
+    Negative(HirExpression),
     Path(HirPath),
 }
 
@@ -66,9 +68,9 @@ pub enum HirOperator {
     Add,
     Subtract,
     Multiply,
-    Negative,
     Not,
     BitNot,
+    Negative,
     Nonnize,
     Propagate,
     MemberAccess,

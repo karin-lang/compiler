@@ -418,54 +418,89 @@ speculate!{
     }
 
     describe "expression constructor" {
-        it "maintains the order of terms" {
-            assert_eq!(
-                OperationParser::construct_expression(vec![
-                    get_string_term("a"),
-                    get_string_term("b"),
-                    get_operator(HirOperator::Add),
-                ]),
-                Ok(HirExpression::Operation(Box::new(HirOperation::Add(
-                    get_string_expression("a"),
-                    get_string_expression("b"),
-                )))),
-            );
-        }
-
-        it "maintains the order of terms and the associativity of operator" {
-            assert_eq!(
-                OperationParser::construct_expression(vec![
-                    get_string_term("a"),
-                    get_string_term("b"),
-                    get_operator(HirOperator::Add),
-                    get_string_term("c"),
-                    get_operator(HirOperator::Add),
-                ]),
-                Ok(HirExpression::Operation(Box::new(HirOperation::Add(
-                    HirExpression::Operation(Box::new(HirOperation::Add(
+        describe "infix operator" {
+            it "maintains the order of terms" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_string_term("b"),
+                        get_operator(HirOperator::Add),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Add(
                         get_string_expression("a"),
                         get_string_expression("b"),
-                    ))),
-                    get_string_expression("c"),
-                )))),
-            );
+                    )))),
+                );
+            }
 
-            assert_eq!(
-                OperationParser::construct_expression(vec![
-                    get_string_term("a"),
-                    get_string_term("b"),
-                    get_string_term("c"),
-                    get_operator(HirOperator::Multiply),
-                    get_operator(HirOperator::Add),
-                ]),
-                Ok(HirExpression::Operation(Box::new(HirOperation::Add(
-                    get_string_expression("a"),
-                    HirExpression::Operation(Box::new(HirOperation::Multiply(
-                        get_string_expression("b"),
+            it "maintains the order of terms and the associativity of operator" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_string_term("b"),
+                        get_operator(HirOperator::Add),
+                        get_string_term("c"),
+                        get_operator(HirOperator::Add),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Add(
+                        HirExpression::Operation(Box::new(HirOperation::Add(
+                            get_string_expression("a"),
+                            get_string_expression("b"),
+                        ))),
                         get_string_expression("c"),
-                    ))),
-                )))),
-            );
+                    )))),
+                );
+
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_string_term("b"),
+                        get_string_term("c"),
+                        get_operator(HirOperator::Multiply),
+                        get_operator(HirOperator::Add),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Add(
+                        get_string_expression("a"),
+                        HirExpression::Operation(Box::new(HirOperation::Multiply(
+                            get_string_expression("b"),
+                            get_string_expression("c"),
+                        ))),
+                    )))),
+                );
+            }
         }
+
+        describe "prefix/postfix operator" {
+            it "consumes only one term" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_operator(HirOperator::Not),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Not(
+                        get_string_expression("a"),
+                    )))),
+                );
+            }
+
+            it "maintains the associativity of operator" {
+                assert_eq!(
+                    OperationParser::construct_expression(vec![
+                        get_string_term("a"),
+                        get_operator(HirOperator::Not),
+                        get_operator(HirOperator::Negative),
+                    ]),
+                    Ok(HirExpression::Operation(Box::new(HirOperation::Negative(
+                        HirExpression::Operation(Box::new(HirOperation::Not(
+                            get_string_expression("a"),
+                        )))
+                    )))),
+                );
+            }
+        }
+
+        describe "group operator" {}
+
+        describe "multiple kinds of operator" {}
     }
 }
