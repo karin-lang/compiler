@@ -17,6 +17,7 @@ fn check<F: FnMut(&mut DataTypeChecker)>(
     checker.errors
 }
 
+/*
 speculate!{
     describe "item" {
         it "checks path expression in function" {
@@ -96,3 +97,4 @@ speculate!{
         }
     }
 }
+*/

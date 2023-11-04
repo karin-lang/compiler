@@ -12,17 +12,15 @@ speculate!{
             HirOperationToken::Operator(operator);
 
         #[allow(unused)]
-        let get_integer_term = |value: usize|
-            HirOperationToken::Term(
-                HirExpression::Literal(
-                    HirLiteral::Integer(
-                        HirIntegerLiteral {
-                            data_type: None,
-                            base: HirIntegerBase::Decimal,
-                            value: value.to_string(),
-                            exponent: None,
-                        },
-                    ),
+        let get_integer_expression = |value: usize|
+            HirExpression::Literal(
+                HirLiteral::Integer(
+                    HirIntegerLiteral {
+                        data_type: None,
+                        base: HirIntegerBase::Decimal,
+                        value: value.to_string(),
+                        exponent: None,
+                    },
                 ),
             );
     }
@@ -453,11 +451,14 @@ speculate!{
                         ]),
                     ]).into_node(),
                 ),
-                vec![
-                    get_integer_term(0),
-                    get_integer_term(1),
-                    get_operator(HirOperator::Add),
-                ],
+                HirExpression::Operation(
+                    Box::new(
+                        HirOperation::Add(
+                            get_integer_expression(0),
+                            get_integer_expression(1),
+                        ),
+                    ),
+                ),
             );
         }
 

@@ -1,6 +1,6 @@
 use speculate::speculate;
 use crate::hir::expr::*;
-use crate::ast::operator::{OperationParser, OperationParserError};
+use crate::ast::operator::OperationParser;
 
 speculate!{
     before {
@@ -15,12 +15,42 @@ speculate!{
                     HirLiteral::String(s.to_string()),
                 ),
             );
+
+        #[allow(unused)]
+        let get_operation_expression = |operation: HirOperation|
+            HirExpression::Operation(Box::new(operation));
+
+        #[allow(unused)]
+        let get_string_expression = |s: &str|
+            HirExpression::Literal(
+                HirLiteral::String(s.to_string()),
+            );
     }
 
-    describe "parsing" {
+    it "parses into operation expression" {
+        assert_eq!(
+            OperationParser::parse(
+                vec![
+                    get_string_term("a"),
+                    get_operator(HirOperator::Add),
+                    get_string_term("b"),
+                ],
+            ),
+            Ok(HirExpression::Operation(
+                Box::new(
+                    HirOperation::Add(
+                        get_string_expression("a"),
+                        get_string_expression("b"),
+                    ),
+                ),
+            )),
+        );
+    }
+
+    describe "postfix notation" {
         it "arrange the order of operation terms" {
             assert_eq!(
-                OperationParser::parse(
+                OperationParser::into_postfix_notation(
                     vec![
                         get_string_term("a"),
                         get_operator(HirOperator::Add),
@@ -39,7 +69,7 @@ speculate!{
             it "the same precedence operator" {
                 assert_eq!(
                     // left: a + b - c
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Add),
@@ -62,7 +92,7 @@ speculate!{
             it "precedes higher precedence operator" {
                 assert_eq!(
                     // left: a * b + c
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Multiply),
@@ -83,7 +113,7 @@ speculate!{
 
                 assert_eq!(
                     // left: a + b * c
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Add),
@@ -106,7 +136,7 @@ speculate!{
             it "reflects right-associativity" {
                 assert_eq!(
                     // left: a = b + c
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Substitute),
@@ -129,7 +159,7 @@ speculate!{
             it "group" {
                 assert_eq!(
                     // left: a * (b + c)
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Multiply),
@@ -154,7 +184,7 @@ speculate!{
 
                 assert_eq!(
                     // left: a * (b + c) * d
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Multiply),
@@ -187,7 +217,7 @@ speculate!{
             it "reverses the order of tokens" {
                 assert_eq!(
                     // left: !a
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_operator(HirOperator::Not),
                             get_string_term("a"),
@@ -204,7 +234,7 @@ speculate!{
             it "multiple" {
                 assert_eq!(
                     // left: -!a
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_operator(HirOperator::Negative),
                             get_operator(HirOperator::Not),
@@ -223,7 +253,7 @@ speculate!{
             it "mixes with infix operator" {
                 assert_eq!(
                     // left: !a + !b
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_operator(HirOperator::Not),
                             get_string_term("a"),
@@ -246,7 +276,7 @@ speculate!{
             it "mixes with group operators" {
                 assert_eq!(
                     // left: !(a + b)
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_operator(HirOperator::Not),
                             get_operator(HirOperator::GroupBegin),
@@ -273,7 +303,7 @@ speculate!{
             it "reverses the order of tokens" {
                 assert_eq!(
                     // left: a!
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Nonnize),
@@ -290,7 +320,7 @@ speculate!{
             it "multiple" {
                 assert_eq!(
                     // left: a!?
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Nonnize),
@@ -309,7 +339,7 @@ speculate!{
             it "mixes with infix operator" {
                 assert_eq!(
                     // left: a! + b
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_string_term("a"),
                             get_operator(HirOperator::Nonnize),
@@ -330,7 +360,7 @@ speculate!{
             it "group" {
                 assert_eq!(
                     // left: (a + b)!
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_operator(HirOperator::GroupBegin),
                             get_string_term("a"),
@@ -357,7 +387,7 @@ speculate!{
             it "" {
                 assert_eq!(
                     // left: -a! + b * c
-                    OperationParser::parse(
+                    OperationParser::into_postfix_notation(
                         vec![
                             get_operator(HirOperator::Negative),
                             get_string_term("a"),
@@ -385,5 +415,57 @@ speculate!{
 
     describe "precedence index" {
         // todo: add test case to test group precedence index
+    }
+
+    describe "expression constructor" {
+        it "maintains the order of terms" {
+            assert_eq!(
+                OperationParser::construct_expression(vec![
+                    get_string_term("a"),
+                    get_string_term("b"),
+                    get_operator(HirOperator::Add),
+                ]),
+                Ok(HirExpression::Operation(Box::new(HirOperation::Add(
+                    get_string_expression("a"),
+                    get_string_expression("b"),
+                )))),
+            );
+        }
+
+        it "maintains the order of terms and the associativity of operator" {
+            assert_eq!(
+                OperationParser::construct_expression(vec![
+                    get_string_term("a"),
+                    get_string_term("b"),
+                    get_operator(HirOperator::Add),
+                    get_string_term("c"),
+                    get_operator(HirOperator::Add),
+                ]),
+                Ok(HirExpression::Operation(Box::new(HirOperation::Add(
+                    HirExpression::Operation(Box::new(HirOperation::Add(
+                        get_string_expression("a"),
+                        get_string_expression("b"),
+                    ))),
+                    get_string_expression("c"),
+                )))),
+            );
+
+            assert_eq!(
+                OperationParser::construct_expression(vec![
+                    get_string_term("a"),
+                    get_string_term("b"),
+                    get_string_term("c"),
+                    get_operator(HirOperator::Multiply),
+                    get_operator(HirOperator::Add),
+                ]),
+                Ok(HirExpression::Operation(Box::new(HirOperation::Add(
+                    get_string_expression("a"),
+                    HirExpression::Operation(Box::new(HirOperation::Multiply(
+                        get_string_expression("b"),
+                        get_string_expression("c"),
+                    ))),
+                )))),
+            );
+        }
     }
 }

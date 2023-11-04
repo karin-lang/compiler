@@ -160,7 +160,7 @@ impl TreeAnalysis {
 
         match content_node.name.as_str() {
             "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
-            "Operation::operation" => HirExpression::Operation(Box::new(self.operation(content_node))),
+            "Operation::operation" => self.operation(content_node),
             "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
             "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node).into()),
             _ => unreachable!("unknown expression"),
@@ -228,15 +228,12 @@ impl TreeAnalysis {
         }
     }
 
-    pub fn operation(&mut self, node: &SyntaxNode) -> HirOperation {
+    pub fn operation(&mut self, node: &SyntaxNode) -> HirExpression {
         let tokens = node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect();
 
         match OperationParser::parse(tokens) {
             Ok(v) => v,
-            Err(e) => {
-                // todo: push error
-                Vec::new()
-            },
+            Err(e) => unimplemented!(),
         }
     }
 

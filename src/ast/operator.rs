@@ -1,14 +1,33 @@
-use crate::hir::expr::*;
+use crate::hir::{expr::*, path::HirPath};
 
 pub type OperationParserResult<T> = Result<T, OperationParserError>;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum OperationParserError {}
+pub enum OperationParserError {
+    InvalidKindOfTerm,
+    InvalidLengthOfTerm,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum OperatorPrecedenceMode {
     InputPrecedence,
     StackPrecedence,
+}
+
+struct IndexedToken<T>(usize, T);
+
+impl<T> IndexedToken<T> {
+    fn new(index: usize, value: T) -> IndexedToken<T> {
+        IndexedToken(index, value)
+    }
+
+    fn index(&self) -> usize {
+        self.0
+    }
+
+    fn value(self) -> T {
+        self.1
+    }
 }
 
 pub struct OperationParser;
@@ -21,7 +40,12 @@ impl OperationParser {
     //   ※数値/IDの場合は必ずスタック送りなので入力→スタック送りして最適化
     // ※前置/中置/後置で重複した記号の演算子に注意（事前に演算子の位置を判断して分類する）
     // 比較が不可能なケースのエラーも実装
-    pub fn parse(mut input: HirOperation) -> OperationParserResult<HirOperation> {
+    pub fn parse(input: HirOperationSequence) -> OperationParserResult<HirExpression> {
+        let output = OperationParser::into_postfix_notation(input)?;
+        OperationParser::construct_expression(output)
+    }
+
+    pub fn into_postfix_notation(mut input: HirOperationSequence) -> OperationParserResult<HirOperationSequence> {
         input.reverse();
         let mut stack = Vec::new();
         let mut output = Vec::new();
@@ -88,6 +112,98 @@ impl OperationParser {
             HirOperator::GroupEnd if is_input_mode => 1,
             HirOperator::GroupEnd if is_stack_mode => unreachable!(),
             _ => unimplemented!(),
+        }
+    }
+
+    pub fn construct_expression(input: HirOperationSequence) -> OperationParserResult<HirExpression> {
+        let mut stack: Vec<IndexedToken<HirExpression>> = Vec::new();
+        let mut output: Option<IndexedToken<HirExpression>> = None;
+
+        let pop_term = |stack: &mut Vec<IndexedToken<HirExpression>>| match stack.pop() {
+            Some(v) => Ok(v),
+            None => Err(OperationParserError::InvalidLengthOfTerm),
+        };
+
+        let pop_two_terms = |operator_index: i32, stack: &mut Vec<IndexedToken<HirExpression>>, output: Option<IndexedToken<HirExpression>>| {
+            // 左右順でindexを考慮する
+            let indexed_terms = match output {
+                Some(term2) => {
+                    let term1 = pop_term(stack)?;
+
+                    if term1.index() < term2.index() {
+                        (operator_index as usize, term1.value(), term2.value())
+                    } else {
+                        (operator_index as usize, term2.value(), term1.value())
+                    }
+                },
+                None => {
+                    let right = pop_term(stack)?;
+                    let left = pop_term(stack)?;
+                    (operator_index as usize, left.value(), right.value())
+                },
+            };
+
+            Ok(indexed_terms)
+        };
+
+        let mut token_index = -1i32;
+
+        for each_token in input {
+            token_index += 1;
+
+            let (output_token_index, operation) = match each_token {
+                HirOperationToken::Operator(operator) => match operator {
+                    HirOperator::Substitute => {
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        (index, HirOperation::Substitute(left, right))
+                    },
+                    HirOperator::Add => {
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        (index, HirOperation::Add(left, right))
+                    },
+                    HirOperator::Multiply => {
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        (index, HirOperation::Multiply(left, right))
+                    },
+                    HirOperator::Path => {
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+
+                        let mut segments =
+                            if let HirExpression::Identifier(v) = right {
+                                vec![v]
+                            } else if let HirExpression::Operation(v) = right {
+                                if let HirOperation::Path(HirPath::Unresolved(v)) = *v {
+                                    v
+                                } else {
+                                    return Err(OperationParserError::InvalidKindOfTerm);
+                                }
+                            } else {
+                                return Err(OperationParserError::InvalidKindOfTerm);
+                            };
+
+                        if let HirExpression::Identifier(v) = left {
+                            segments.push(v);
+                        } else {
+                            return Err(OperationParserError::InvalidKindOfTerm);
+                        }
+
+                        (index, HirOperation::Path(HirPath::Unresolved(segments)))
+                    },
+                    _ => unimplemented!(),
+                },
+                HirOperationToken::Term(term) => {
+                    stack.push(IndexedToken::new(token_index as usize, term));
+                    continue;
+                },
+            };
+
+            let new_operation = HirExpression::Operation(Box::new(operation));
+            output = Some(IndexedToken(output_token_index, new_operation));
+        }
+
+        match output {
+            Some(v) => Ok(v.value()),
+            None => Err(OperationParserError::InvalidLengthOfTerm),
         }
     }
 }

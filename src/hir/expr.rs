@@ -44,7 +44,15 @@ pub struct HirFloatLiteral {
     pub value: String,
 }
 
-pub type HirOperation = Vec<HirOperationToken>;
+#[derive(Clone, Debug, PartialEq)]
+pub enum HirOperation {
+    Substitute(HirExpression, HirExpression),
+    Add(HirExpression, HirExpression),
+    Multiply(HirExpression, HirExpression),
+    Path(HirPath),
+}
+
+pub type HirOperationSequence = Vec<HirOperationToken>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirOperationToken {

@@ -1,4 +1,4 @@
-use crate::hir::{path::*, item::*, expr::{HirExpression, HirOperation}};
+use crate::hir::{path::*, item::*, expr::HirExpression};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum DataTypeError {
@@ -44,7 +44,7 @@ impl<'a> DataTypeChecker<'a> {
     pub(crate) fn expression(&mut self, expr: &mut HirExpression) {
         match expr {
             HirExpression::Operation(operation) => match &mut **operation {
-                HirOperation::Path(path) => self.path(path),
+                // HirOperation::Path(path) => self.path(path),
                 _ => unimplemented!(),
             },
             _ => unimplemented!(),
@@ -68,5 +68,4 @@ impl<'a> DataTypeChecker<'a> {
         let new_path = HirPath::Resolved(path_index.clone());
         let _ = std::mem::replace(path, new_path);
     }
-
 }
