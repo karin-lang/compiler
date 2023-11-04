@@ -42,6 +42,7 @@ impl OperationParser {
     // 比較が不可能なケースのエラーも実装
     pub fn parse(input: HirOperationSequence) -> OperationParserResult<HirExpression> {
         let output = OperationParser::into_postfix_notation(input)?;
+        println!("{:?}", output);
         OperationParser::construct_expression(output)
     }
 
@@ -117,38 +118,20 @@ impl OperationParser {
 
     pub fn construct_expression(input: HirOperationSequence) -> OperationParserResult<HirExpression> {
         let mut stack: Vec<IndexedToken<HirExpression>> = Vec::new();
-        let mut output: Option<IndexedToken<HirExpression>> = None;
 
         let pop_term = |stack: &mut Vec<IndexedToken<HirExpression>>| match stack.pop() {
             Some(v) => Ok(v),
             None => Err(OperationParserError::InvalidLengthOfTerm),
         };
 
-        let pop_term_or_output = |stack: &mut Vec<IndexedToken<HirExpression>>, output: Option<IndexedToken<HirExpression>>| match stack.pop() {
-            Some(v) => Ok(v),
-            None => match output {
-                Some(v) => Ok(v),
-                None => Err(OperationParserError::InvalidLengthOfTerm),
-            },
-        };
+        let pop_two_terms = |operator_index: i32, stack: &mut Vec<IndexedToken<HirExpression>>| {
+            let term1 = pop_term(stack)?;
+            let term2 = pop_term(stack)?;
 
-        let pop_two_terms = |operator_index: i32, stack: &mut Vec<IndexedToken<HirExpression>>, output: Option<IndexedToken<HirExpression>>| {
-            // 左右順でindexを考慮する
-            let indexed_terms = match output {
-                Some(term2) => {
-                    let term1 = pop_term(stack)?;
-
-                    if term1.index() < term2.index() {
-                        (operator_index as usize, term1.value(), term2.value())
-                    } else {
-                        (operator_index as usize, term2.value(), term1.value())
-                    }
-                },
-                None => {
-                    let right = pop_term(stack)?;
-                    let left = pop_term(stack)?;
-                    (operator_index as usize, left.value(), right.value())
-                },
+            let indexed_terms = if term1.index() < term2.index() {
+                (operator_index as usize, term1.value(), term2.value())
+            } else {
+                (operator_index as usize, term2.value(), term1.value())
             };
 
             Ok(indexed_terms)
@@ -162,32 +145,32 @@ impl OperationParser {
             let (output_token_index, operation) = match each_token {
                 HirOperationToken::Operator(operator) => match operator {
                     HirOperator::Substitute => {
-                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
                         (index, HirOperation::Substitute(left, right))
                     },
                     HirOperator::Add => {
-                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
                         (index, HirOperation::Add(left, right))
                     },
                     HirOperator::Subtract => {
-                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
                         (index, HirOperation::Subtract(left, right))
                     },
                     HirOperator::Multiply => {
-                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
                         (index, HirOperation::Multiply(left, right))
                     },
-                    HirOperator::Not => (token_index as usize, HirOperation::Not(pop_term_or_output(&mut stack, output)?.value())),
-                    HirOperator::BitNot => (token_index as usize, HirOperation::BitNot(pop_term_or_output(&mut stack, output)?.value())),
-                    HirOperator::Negative => (token_index as usize, HirOperation::Negative(pop_term_or_output(&mut stack, output)?.value())),
-                    HirOperator::Nonnize => (token_index as usize, HirOperation::Nonnize(pop_term_or_output(&mut stack, output)?.value())),
-                    HirOperator::Propagate => (token_index as usize, HirOperation::Propagate(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::Not => (token_index as usize, HirOperation::Not(pop_term(&mut stack)?.value())),
+                    HirOperator::BitNot => (token_index as usize, HirOperation::BitNot(pop_term(&mut stack)?.value())),
+                    HirOperator::Negative => (token_index as usize, HirOperation::Negative(pop_term(&mut stack)?.value())),
+                    HirOperator::Nonnize => (token_index as usize, HirOperation::Nonnize(pop_term(&mut stack)?.value())),
+                    HirOperator::Propagate => (token_index as usize, HirOperation::Propagate(pop_term(&mut stack)?.value())),
                     HirOperator::MemberAccess => {
-                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
                         (index, HirOperation::MemberAccess(left, right))
                     },
                     HirOperator::Path => {
-                        let (index, left, right) = pop_two_terms(token_index, &mut stack, output)?;
+                        let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
 
                         let mut segments =
                             if let HirExpression::Identifier(v) = right {
@@ -210,7 +193,7 @@ impl OperationParser {
 
                         (index, HirOperation::Path(HirPath::Unresolved(segments)))
                     },
-                    HirOperator::GroupBegin => (token_index as usize, HirOperation::Group(pop_term_or_output(&mut stack, output)?.value())),
+                    HirOperator::GroupBegin => (token_index as usize, HirOperation::Group(pop_term(&mut stack)?.value())),
                     HirOperator::GroupEnd => continue,
                 },
                 HirOperationToken::Term(term) => {
@@ -220,12 +203,9 @@ impl OperationParser {
             };
 
             let new_operation = HirExpression::Operation(Box::new(operation));
-            output = Some(IndexedToken(output_token_index, new_operation));
+            stack.push(IndexedToken(output_token_index, new_operation));
         }
 
-        match output {
-            Some(v) => Ok(v.value()),
-            None => Err(OperationParserError::InvalidLengthOfTerm),
-        }
+        Ok(pop_term(&mut stack)?.value())
     }
 }
