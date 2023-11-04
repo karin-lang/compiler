@@ -335,7 +335,7 @@ impl VoltModule for Operation {
             group := seq![
                 str("(").group("operator"),
                 WHITESPACE(),
-                Operation::term().expand_once(),
+                Expression::expression(),
                 WHITESPACE(),
                 str(")").group("operator"),
             ];

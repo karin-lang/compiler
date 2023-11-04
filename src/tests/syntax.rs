@@ -846,7 +846,7 @@ speculate!{
                         ]),
                         node!("operator" => [leaf!("+")]),
                         node!("operator" => [leaf!("(")]),
-                        node!("Expression::pure_expression" => [
+                        node!("Expression::expression" => [
                             node!("Literal::literal" => [
                                 node!("Literal::number" => [
                                     node!("value" => [
@@ -941,7 +941,7 @@ speculate!{
                     node!("Operation::operation" => [
                         node!("operator" => [leaf!("!e")]),
                         node!("operator" => [leaf!("(")]),
-                        node!("Expression::pure_expression" => [
+                        node!("Expression::expression" => [
                             node!("Literal::literal" => [
                                 node!("Literal::number" => [
                                     node!("value" => [
@@ -960,16 +960,50 @@ speculate!{
         }
 
         describe "group term" {
-            it "accepts parenthesis around term" {
+            it "encloses an expression term with parentheses" {
                 expect_success_eq("(0)", "Operation::operation", tree!(
                     node!("Operation::operation" => [
                         node!("operator" => [leaf!("(")]),
-                        node!("Expression::pure_expression" => [
+                        node!("Expression::expression" => [
                             node!("Literal::literal" => [
                                 node!("Literal::number" => [
                                     node!("value" => [
                                         node!("Literal::decimal_number" => [
                                             leaf!("0"),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                        ]),
+                        node!("operator" => [leaf!(")")]),
+                    ])
+                ));
+
+                expect_success_eq("(0 + 1)", "Operation::operation", tree!(
+                    node!("Operation::operation" => [
+                        node!("operator" => [leaf!("(")]),
+                        node!("Expression::expression" => [
+                            node!("Operation::operation" => [
+                                node!("Expression::pure_expression" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::number" => [
+                                            node!("value" => [
+                                                node!("Literal::decimal_number" => [
+                                                    leaf!("0"),
+                                                ]),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                                node!("operator" => [leaf!("+")]),
+                                node!("Expression::pure_expression" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::number" => [
+                                            node!("value" => [
+                                                node!("Literal::decimal_number" => [
+                                                    leaf!("1"),
+                                                ]),
+                                            ]),
                                         ]),
                                     ]),
                                 ]),
