@@ -46,7 +46,7 @@ speculate!{
                     generator.item(&HirPathIndexBinding::new(0.into(), item)),
                     JsItem::Function(
                         JsFunction {
-                            id: "f_0".to_string(),
+                            id: "i_0".to_string(),
                             arguments: vec![
                                 "a".to_string(),
                             ],

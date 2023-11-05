@@ -7,14 +7,14 @@ speculate!{
             items: vec![
                 JsItem::Function(
                     JsFunction {
-                        id: "f_0".to_string(),
+                        id: "i_0".to_string(),
                         arguments: Vec::new(),
                         statements: Vec::new(),
                     },
                 ),
                 JsItem::Function(
                     JsFunction {
-                        id: "f_1".to_string(),
+                        id: "i_1".to_string(),
                         arguments: Vec::new(),
                         statements: Vec::new(),
                     },
@@ -24,7 +24,7 @@ speculate!{
 
         assert_eq!(
             JsCodeGenerator::generate(&js),
-            "function f_0(){}function f_1(){}".to_string(),
+            "function i_0(){}function i_1(){}".to_string(),
         );
     }
 
@@ -32,7 +32,7 @@ speculate!{
         it "reflects containing item" {
             let item = JsItem::Function(
                 JsFunction {
-                    id: "f_0".to_string(),
+                    id: "i_0".to_string(),
                     arguments: Vec::new(),
                     statements: Vec::new(),
                 },
@@ -40,14 +40,14 @@ speculate!{
 
             assert_eq!(
                 JsCodeGenerator::item(&item),
-                "function f_0(){}".to_string(),
+                "function i_0(){}".to_string(),
             );
         }
 
         describe "function" {
             it "separates arguments and statements" {
                 let function = JsFunction {
-                    id: "f_0".to_string(),
+                    id: "i_0".to_string(),
                     arguments: vec![
                         "a".to_string(),
                         "b".to_string(),
@@ -68,7 +68,7 @@ speculate!{
 
                 assert_eq!(
                     JsCodeGenerator::function(&function),
-                    "function f_0(a,b){true;true}".to_string(),
+                    "function i_0(a,b){true;true}".to_string(),
                 );
             }
         }

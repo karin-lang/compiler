@@ -23,7 +23,7 @@ impl<'a> JsGenerator<'a> {
             HirItem::Function(function) => {
                 JsItem::Function(
                     JsFunction {
-                        id: format!("f_{}", path_index),
+                        id: format!("i_{}", path_index),
                         arguments: function.arguments.iter().map(|v| v.identifier().clone().into()).collect(),
                         statements: function.expressions.iter().map(|v| self.statement(v)).collect(),
                     },
@@ -73,7 +73,7 @@ impl<'a> JsGenerator<'a> {
 
     pub fn path(&mut self, path: &HirPath) -> String {
         match path {
-            HirPath::Resolved(index) => format!("p_{index}"),
+            HirPath::Resolved(index) => format!("i_{index}"),
             HirPath::Unresolved(_) => unreachable!("path not resolved"),
         }
     }
