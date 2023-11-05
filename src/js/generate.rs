@@ -36,7 +36,7 @@ impl<'a> JsGenerator<'a> {
     pub fn statement(&mut self, expr: &HirExpression) -> JsStatement {
         match expr {
             HirExpression::Literal(literal) => JsStatement::Expression(JsExpression::Literal(self.literal(literal))),
-            HirExpression::Operation(operation) => JsStatement::Expression(JsExpression::Operation(Box::new(self.operation(operation)))),
+            HirExpression::Operation(operation) => JsStatement::Expression(self.operation(operation)),
             _ => unimplemented!(),
         }
     }
@@ -52,17 +52,29 @@ impl<'a> JsGenerator<'a> {
         }
     }
 
-    pub fn operation(&mut self, operation: &HirOperation) -> JsOperation {
-        match operation {
+    pub fn operation(&mut self, operation: &HirOperation) -> JsExpression {
+        let js_operation = match operation {
+            HirOperation::Substitute(_, _) => unimplemented!(),
             HirOperation::Add(left, right) => JsOperation::Add(self.statement(left).into(), self.statement(right).into()),
             HirOperation::Subtract(left, right) => JsOperation::Subtract(self.statement(left).into(), self.statement(right).into()),
             HirOperation::Multiply(left, right) => JsOperation::Multiply(self.statement(left).into(), self.statement(right).into()),
             HirOperation::Not(term) => JsOperation::Not(self.statement(term).into()),
             HirOperation::BitNot(term) => JsOperation::BitNot(self.statement(term).into()),
             HirOperation::Negative(term) => JsOperation::Negative(self.statement(term).into()),
+            HirOperation::Nonnize(_) => unimplemented!(),
+            HirOperation::Propagate(_) => unimplemented!(),
             HirOperation::MemberAccess(left, right) => JsOperation::MemberAccess(self.statement(left).into(), self.statement(right).into()),
+            HirOperation::Path(path) => return JsExpression::Identifier(self.path(path)),
             HirOperation::Group(term) => JsOperation::Group(self.statement(term).into()),
-            _ => unreachable!("cannot convert to js operation"),
+        };
+
+        JsExpression::Operation(Box::new(js_operation))
+    }
+
+    pub fn path(&mut self, path: &HirPath) -> String {
+        match path {
+            HirPath::Resolved(index) => format!("p_{index}"),
+            HirPath::Unresolved(_) => unreachable!("path not resolved"),
         }
     }
 }

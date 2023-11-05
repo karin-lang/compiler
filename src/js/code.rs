@@ -32,6 +32,7 @@ impl JsCodeGenerator {
         match expression {
             JsExpression::Literal(literal) => JsCodeGenerator::literal(literal),
             JsExpression::Operation(operation) => JsCodeGenerator::operation(operation),
+            JsExpression::Identifier(id) => id.clone(),
         }
     }
 

@@ -39,6 +39,10 @@ impl<T> HirPathIndexBinding<T> {
     pub fn value(&self) -> &T {
         &self.1
     }
+
+    pub fn value_mut(&mut self) -> &mut T {
+        &mut self.1
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

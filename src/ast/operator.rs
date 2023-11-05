@@ -42,7 +42,6 @@ impl OperationParser {
     // 比較が不可能なケースのエラーも実装
     pub fn parse(input: HirOperationSequence) -> OperationParserResult<HirExpression> {
         let output = OperationParser::into_postfix_notation(input)?;
-        println!("{:?}", output);
         OperationParser::construct_expression(output)
     }
 
@@ -108,7 +107,11 @@ impl OperationParser {
             HirOperator::Nonnize if is_stack_mode => 12,
             HirOperator::Propagate if is_input_mode => 11,
             HirOperator::Propagate if is_stack_mode => 12,
-            HirOperator::GroupBegin if is_input_mode => 13,
+            HirOperator::MemberAccess if is_input_mode => 13,
+            HirOperator::MemberAccess if is_stack_mode => 14,
+            HirOperator::Path if is_input_mode => 15,
+            HirOperator::Path if is_stack_mode => 16,
+            HirOperator::GroupBegin if is_input_mode => 17,
             HirOperator::GroupBegin if is_stack_mode => 1,
             HirOperator::GroupEnd if is_input_mode => 1,
             HirOperator::GroupEnd if is_stack_mode => unreachable!(),
@@ -173,9 +176,9 @@ impl OperationParser {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
 
                         let mut segments =
-                            if let HirExpression::Identifier(v) = right {
+                            if let HirExpression::Identifier(v) = left {
                                 vec![v]
-                            } else if let HirExpression::Operation(v) = right {
+                            } else if let HirExpression::Operation(v) = left {
                                 if let HirOperation::Path(HirPath::Unresolved(v)) = *v {
                                     v
                                 } else {
@@ -185,7 +188,7 @@ impl OperationParser {
                                 return Err(OperationParserError::InvalidKindOfTerm);
                             };
 
-                        if let HirExpression::Identifier(v) = left {
+                        if let HirExpression::Identifier(v) = right {
                             segments.push(v);
                         } else {
                             return Err(OperationParserError::InvalidKindOfTerm);

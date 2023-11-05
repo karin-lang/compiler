@@ -4,6 +4,7 @@ pub mod ir;
 
 use volt::parser::ParserError;
 use crate::ast::tree::{TreeAnalysis, AstHako, AstModule};
+use crate::hir::type_check::DataTypeChecker;
 use crate::{Compiler, ParserResult, Syntax, RuleId};
 use crate::js::generate::JsGenerator;
 use crate::js::code::JsCodeGenerator;
@@ -32,7 +33,7 @@ impl Compiler<&str, Result<String, JsTranspilerError>, JsTranspilerOptions> for 
             Err(e) => return Err(JsTranspilerError::ParserError(e)),
         };
 
-        let hir = TreeAnalysis::analyze(vec![
+        let mut hir = TreeAnalysis::analyze(vec![
             &AstHako {
                 id: "test".to_string(),
                 modules: vec![
@@ -45,6 +46,8 @@ impl Compiler<&str, Result<String, JsTranspilerError>, JsTranspilerOptions> for 
             },
         ]);
 
+        // todo: handle errors
+        let data_type_errors = DataTypeChecker::check(&hir.path_tree, &mut hir.items);
         let js = JsGenerator::generate(&hir);
         let js_code = JsCodeGenerator::generate(&js);
         Ok(js_code)

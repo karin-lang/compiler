@@ -19,11 +19,11 @@ impl<'a> DataTypeChecker<'a> {
         }
     }
 
-    pub fn check(path_tree: &'a HirPathTree, items: &mut Vec<HirItem>) -> Vec<DataTypeError> {
+    pub fn check(path_tree: &'a HirPathTree, items: &mut Vec<HirPathIndexBinding<HirItem>>) -> Vec<DataTypeError> {
         let mut checker = DataTypeChecker::new(path_tree);
 
         for each_item in items {
-            checker.item(each_item);
+            checker.item(each_item.value_mut());
         }
 
         checker.errors

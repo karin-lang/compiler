@@ -34,6 +34,7 @@ impl Into<JsExpression> for JsStatement {
 pub enum JsExpression {
     Literal(JsLiteral),
     Operation(Box<JsOperation>),
+    Identifier(String),
 }
 
 #[derive(Clone, Debug, PartialEq)]
