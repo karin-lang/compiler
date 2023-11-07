@@ -52,6 +52,7 @@ pub enum JsOperation {
     Not(JsExpression),
     BitNot(JsExpression),
     Negative(JsExpression),
+    FunctionCall(JsExpression, Vec<JsExpression>),
     MemberAccess(JsExpression, JsExpression),
     Group(JsExpression),
 }

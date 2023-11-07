@@ -107,6 +107,8 @@ impl OperationParser {
             HirOperator::Nonnize if is_stack_mode => 12,
             HirOperator::Propagate if is_input_mode => 11,
             HirOperator::Propagate if is_stack_mode => 12,
+            HirOperator::FunctionCall(_) if is_input_mode => 11,
+            HirOperator::FunctionCall(_) if is_stack_mode => 12,
             HirOperator::MemberAccess if is_input_mode => 13,
             HirOperator::MemberAccess if is_stack_mode => 14,
             HirOperator::Path if is_input_mode => 15,
@@ -168,6 +170,7 @@ impl OperationParser {
                     HirOperator::Negative => (token_index as usize, HirOperation::Negative(pop_term(&mut stack)?.value())),
                     HirOperator::Nonnize => (token_index as usize, HirOperation::Nonnize(pop_term(&mut stack)?.value())),
                     HirOperator::Propagate => (token_index as usize, HirOperation::Propagate(pop_term(&mut stack)?.value())),
+                    HirOperator::FunctionCall(arguments) => (token_index as usize, HirOperation::FunctionCall(pop_term(&mut stack)?.value(), arguments)),
                     HirOperator::MemberAccess => {
                         let (index, left, right) = pop_two_terms(token_index, &mut stack)?;
                         (index, HirOperation::MemberAccess(left, right))

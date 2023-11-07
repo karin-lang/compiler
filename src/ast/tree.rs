@@ -245,8 +245,8 @@ impl TreeAnalysis {
     }
 
     pub fn operator(&mut self, node: &SyntaxNode) -> HirOperator {
-        match node.children.get_leaf_or_none(0) {
-            Some(operator_leaf) => match operator_leaf.value.as_ref() {
+        if let Some(operator_leaf) = node.children.get_leaf_or_none(0) {
+            match operator_leaf.value.as_ref() {
                 "=" => HirOperator::Substitute,
                 "+" => HirOperator::Add,
                 "-" => HirOperator::Subtract,
@@ -260,9 +260,18 @@ impl TreeAnalysis {
                 "::" => HirOperator::Path,
                 "(" => HirOperator::GroupBegin,
                 ")" => HirOperator::GroupEnd,
-                _ => unimplemented!(),
-            },
-            None => unimplemented!(),
+                _ => todo!("add more operators"),
+            }
+        } else {
+            let operator_node = node.children.get_node(0);
+
+            match operator_node.name.as_str() {
+                "Operation::function_call_operator" => {
+                    let arguments = operator_node.children.filter_nodes().iter().map(|v| self.expression(v)).collect();
+                    HirOperator::FunctionCall(arguments)
+                },
+                _ => unreachable!("unknown format of operator node"),
+            }
         }
     }
 

@@ -51,6 +51,11 @@ impl JsCodeGenerator {
             JsOperation::Not(term) => format!("!{}", JsCodeGenerator::expression(term)),
             JsOperation::BitNot(term) => format!("~{}", JsCodeGenerator::expression(term)),
             JsOperation::Negative(term) => format!("-{}", JsCodeGenerator::expression(term)),
+            JsOperation::FunctionCall(term, arguments) => format!(
+                "{}({})",
+                JsCodeGenerator::expression(term),
+                arguments.iter().map(|v| JsCodeGenerator::expression(v)).collect::<Vec<String>>().join(","),
+            ),
             JsOperation::MemberAccess(left, right) => format!("{}.{}", JsCodeGenerator::expression(left), JsCodeGenerator::expression(right)),
             JsOperation::Group(term) => format!("({})", JsCodeGenerator::expression(term)),
         }

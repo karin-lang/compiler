@@ -43,11 +43,46 @@ impl<'a> DataTypeChecker<'a> {
 
     pub(crate) fn expression(&mut self, expr: &mut HirExpression) {
         match expr {
+            // todo: 文字列中の埋め込みリテラルが追加された際に型検査を通す
+            HirExpression::Literal(_) => (),
             HirExpression::Operation(operation) => match &mut **operation {
+                HirOperation::Substitute(left, right) => {
+                    self.expression(left);
+                    self.expression(right);
+                },
+                HirOperation::Add(left, right) => {
+                    self.expression(left);
+                    self.expression(right);
+                },
+                HirOperation::Subtract(left, right) => {
+                    self.expression(left);
+                    self.expression(right);
+                },
+                HirOperation::Multiply(left, right) => {
+                    self.expression(left);
+                    self.expression(right);
+                },
+                HirOperation::Not(term) => self.expression(term),
+                HirOperation::BitNot(term) => self.expression(term),
+                HirOperation::Negative(term) => self.expression(term),
+                HirOperation::Nonnize(term) => self.expression(term),
+                HirOperation::Propagate(term) => self.expression(term),
+                HirOperation::FunctionCall(term, arguments) => {
+                    self.expression(term);
+
+                    for each_argument in arguments {
+                        self.expression(each_argument);
+                    }
+                },
+                HirOperation::MemberAccess(left, right) => {
+                    self.expression(left);
+                    self.expression(right);
+                },
                 HirOperation::Path(path) => self.path(path),
-                _ => unimplemented!(),
+                HirOperation::Group(term) => self.expression(term),
             },
-            _ => unimplemented!(),
+            HirExpression::DataType(_) => unimplemented!(),
+            HirExpression::Identifier(_) => unimplemented!(),
         }
     }
 

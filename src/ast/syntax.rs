@@ -303,6 +303,7 @@ struct Operation {
     group: Element,
     prefix_operator: Element,
     postfix_operator: Element,
+    function_call_operator: Element,
     infix_operator: Element,
 }
 
@@ -349,14 +350,24 @@ impl VoltModule for Operation {
                 _ => unreachable!(),
             });
             postfix_operator := choice![
-                str("!"), str("?"),
-            ].reduce(|mut v| match v.pop().unwrap() {
-                SyntaxChild::Leaf(mut leaf) => {
-                    leaf.set_value(format!("e{}", leaf.value));
-                    vec![SyntaxChild::Leaf(leaf)]
-                },
-                _ => unreachable!(),
-            });
+                choice![
+                    str("!"), str("?"),
+                ].reduce(|mut v| match v.pop().unwrap() {
+                    SyntaxChild::Leaf(mut leaf) => {
+                        leaf.set_value(format!("e{}", leaf.value));
+                        vec![SyntaxChild::Leaf(leaf)]
+                    },
+                    _ => unreachable!(),
+                }),
+                Operation::function_call_operator(),
+            ];
+            function_call_operator := seq![
+                str("(").hide(),
+                WHITESPACE(),
+                Expression::expression().separate(str(",").separate_around(WHITESPACE()).hide()).optional(),
+                WHITESPACE(),
+                str(")").hide(),
+            ];
             infix_operator := choice![
                 str("="), str("+"), str("-"), str("*"), str("."), str("::"),
             ];

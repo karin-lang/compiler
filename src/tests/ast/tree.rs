@@ -463,7 +463,94 @@ speculate!{
         }
 
         describe "operator" {
-            // todo: add operators includes function call
+            // todo: add operators
+            describe "function call" {
+                it "converts zero or more arguments" {
+                    assert_eq!(
+                        new_analyzer().operation(
+                            node!("Operation::operation" => [
+                                node!("Expression::pure_expression" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::number" => [
+                                            node!("value" => [
+                                                node!("Literal::decimal_number" => [
+                                                    leaf!("0"),
+                                                ]),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                                node!("operator" => [
+                                    node!("Operation::function_call_operator" => []),
+                                ]),
+                            ]).into_node(),
+                        ),
+                        HirExpression::Operation(
+                            Box::new(
+                                HirOperation::FunctionCall(
+                                    get_integer_expression(0),
+                                    Vec::new(),
+                                ),
+                            ),
+                        ),
+                    );
+
+                    assert_eq!(
+                        new_analyzer().operation(
+                            node!("Operation::operation" => [
+                                node!("Expression::pure_expression" => [
+                                    node!("Literal::literal" => [
+                                        node!("Literal::number" => [
+                                            node!("value" => [
+                                                node!("Literal::decimal_number" => [
+                                                    leaf!("0"),
+                                                ]),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                                node!("operator" => [
+                                    node!("Operation::function_call_operator" => [
+                                        node!("Expression::expression" => [
+                                            node!("Literal::literal" => [
+                                                node!("Literal::number" => [
+                                                    node!("value" => [
+                                                        node!("Literal::decimal_number" => [
+                                                            leaf!("1"),
+                                                        ]),
+                                                    ]),
+                                                ]),
+                                            ]),
+                                        ]),
+                                        node!("Expression::expression" => [
+                                            node!("Literal::literal" => [
+                                                node!("Literal::number" => [
+                                                    node!("value" => [
+                                                        node!("Literal::decimal_number" => [
+                                                            leaf!("2"),
+                                                        ]),
+                                                    ]),
+                                                ]),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]).into_node(),
+                        ),
+                        HirExpression::Operation(
+                            Box::new(
+                                HirOperation::FunctionCall(
+                                    get_integer_expression(0),
+                                    vec![
+                                        get_integer_expression(1),
+                                        get_integer_expression(2),
+                                    ],
+                                ),
+                            ),
+                        ),
+                    );
+                }
+            }
         }
     }
 

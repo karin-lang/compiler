@@ -53,6 +53,7 @@ impl<'a> JsGenerator<'a> {
     }
 
     pub fn operation(&mut self, operation: &HirOperation) -> JsExpression {
+        // todo: convert statement to expression
         let js_operation = match operation {
             HirOperation::Substitute(_, _) => unimplemented!(),
             HirOperation::Add(left, right) => JsOperation::Add(self.statement(left).into(), self.statement(right).into()),
@@ -63,6 +64,10 @@ impl<'a> JsGenerator<'a> {
             HirOperation::Negative(term) => JsOperation::Negative(self.statement(term).into()),
             HirOperation::Nonnize(_) => unimplemented!(),
             HirOperation::Propagate(_) => unimplemented!(),
+            HirOperation::FunctionCall(term, arguments) => JsOperation::FunctionCall(
+                self.statement(term).into(),
+                arguments.iter().map(|v| self.statement(v).into()).collect(),
+            ),
             HirOperation::MemberAccess(left, right) => JsOperation::MemberAccess(self.statement(left).into(), self.statement(right).into()),
             HirOperation::Path(path) => return JsExpression::Identifier(self.path(path)),
             HirOperation::Group(term) => JsOperation::Group(self.statement(term).into()),
