@@ -3,7 +3,7 @@ use volt_derive::VoltModuleDefinition;
 use super::*;
 
 #[derive(VoltModuleDefinition)]
-pub struct Expression {
+pub(super) struct Expression {
     expression: Element,
     pure_expression: Element,
 }
@@ -42,7 +42,7 @@ impl VoltModule for Expression {
 }
 
 #[derive(VoltModuleDefinition)]
-pub struct Literal {
+pub(super) struct Literal {
     literal: Element,
     boolean: Element,
     number: Element,
@@ -198,7 +198,7 @@ impl VoltModule for Literal {
 }
 
 #[derive(VoltModuleDefinition)]
-pub struct Operation {
+pub(super) struct Operation {
     operation: Element,
     term: Element,
     infix: Element,
@@ -278,7 +278,7 @@ impl VoltModule for Operation {
 }
 
 #[derive(VoltModuleDefinition)]
-pub struct DataType {
+pub(super) struct DataType {
     data_type: Element,
     primitive: Element,
     primitive_number: Element,

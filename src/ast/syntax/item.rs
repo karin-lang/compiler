@@ -4,7 +4,7 @@ use volt_derive::VoltModuleDefinition;
 use super::{*, expr::Expression};
 
 #[derive(VoltModuleDefinition)]
-pub struct Item {
+pub(super) struct Item {
     item: Element,
 }
 
@@ -17,7 +17,7 @@ impl VoltModule for Item {
 }
 
 #[derive(VoltModuleDefinition)]
-pub struct Function {
+pub(super) struct Function {
     function: Element,
     formal_argument: Element,
 }
