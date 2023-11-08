@@ -75,7 +75,11 @@ impl VoltModule for Identifier {
                 // reserved keyword which is followed by characters like "public" (not "pub")
                 seq![Identifier::reserved(), chars(r"a-zA-Z\d_").min(1)].join(),
             ];
-            reserved := choice![str("fn"), str("hako"), str("pub"), DataType::primitive(), Literal::boolean()];
+            reserved := choice![
+                str("bool"), str("char"), str("fn"), str("hako"), str("none"), str("pub"), str("str"),
+                Literal::boolean(),
+                DataType::primitive_number(),
+            ];
         }
     }
 }
