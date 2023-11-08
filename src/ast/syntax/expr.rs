@@ -288,18 +288,22 @@ pub(super) struct DataType {
 impl VoltModule for DataType {
     fn new() -> DataType {
         define_rules!{
-            data_type := choice![DataType::primitive(), DataType::generic()];
             // todo: add types
+            data_type := choice![DataType::primitive(), DataType::generic()];
+            // todo: add tuple, vector, etc
             primitive := choice![
                 DataType::primitive_number().expand_once(),
-                str("char"), str("str"),
+                str("bool"), str("char"), str("str"), str("none")
             ];
             primitive_number := choice![
                 DataType::integer_primitive_number().expand_once(),
                 DataType::float_primitive_number().expand_once(),
             ];
-            integer_primitive_number := choice![str("usize")];
-            float_primitive_number := choice![str("f32")];
+            integer_primitive_number := choice![
+                str("s8"), str("s16"), str("s32"), str("s64"), str("ssize"),
+                str("u8"), str("u16"), str("u32"), str("u64"), str("usize"),
+            ];
+            float_primitive_number := choice![str("f32"), str("f64")];
             generic := seq![
                 Identifier::identifier().expand_once().group("Identifier::identifier"), WHITESPACE(),
                 str("<").hide(), WHITESPACE(),
