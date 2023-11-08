@@ -4,6 +4,19 @@ use volt_derive::VoltModuleDefinition;
 use super::{*, expr::Expression};
 
 #[derive(VoltModuleDefinition)]
+pub struct Item {
+    item: Element,
+}
+
+impl VoltModule for Item {
+    fn new() -> Item {
+        define_rules!{
+            item := choice![Function::function()];
+        }
+    }
+}
+
+#[derive(VoltModuleDefinition)]
 pub struct Function {
     function: Element,
     formal_argument: Element,

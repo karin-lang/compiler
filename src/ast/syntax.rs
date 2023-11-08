@@ -14,6 +14,7 @@ impl Syntax {
         volt.add_module(Main::new());
         volt.add_module(Symbol::new());
         volt.add_module(Identifier::new());
+        volt.add_module(Item::new());
         volt.add_module(Function::new());
         volt.add_module(Expression::new());
         volt.add_module(Literal::new());
@@ -35,7 +36,7 @@ struct Main {
 impl VoltModule for Main {
     fn new() -> Main {
         define_rules!{
-            main := choice![Main::item().separate_around(WHITESPACE()), WHITESPACE()];
+            main := choice![Item::item().separate_around(WHITESPACE()), WHITESPACE()];
             item := choice![Function::function()];
             accessibility := choice![str("pub@hako"), str("pub")].optional();
         }
@@ -44,17 +45,17 @@ impl VoltModule for Main {
 
 #[derive(VoltModuleDefinition)]
 struct Symbol {
+    whitespace: Element,
     expression_separator: Element,
     around_expression_separator: Element,
-    whitespace: Element,
 }
 
 impl VoltModule for Symbol {
     fn new() -> Symbol {
         define_rules!{
+            whitespace := choice![str(" "), str("\t"), str("\n")];
             expression_separator := choice![str("\n"), str(";")].around(Symbol::around_expression_separator().min(0));
             around_expression_separator := choice![str(" "), str("\t")];
-            whitespace := choice![str(" "), str("\t"), str("\n")];
         }
     }
 }

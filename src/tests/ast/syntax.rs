@@ -46,34 +46,22 @@ speculate!{
         it "rejects semicolon separator" {
             expect_unmatch_failure(";", "Main::main");
         }
+    }
 
-        describe "accessibility" {
-            it "private" {
-                expect_success_eq("", "Main::accessibility", tree!(
-                    node!("Main::accessibility" => [])
-                ));
-            }
+    describe "accessibility" {
+        it "matches any accessibility optionally" {
+            expect_success_eq("pub", "Main::accessibility", tree!(
+                node!("Main::accessibility" => [leaf!("pub")])
+            ));
 
-            it "public" {
-                expect_success_eq("pub", "Main::accessibility", tree!(
-                    node!("Main::accessibility" => [
-                        leaf!("pub"),
-                    ])
-                ));
-            }
-
-            it "public in hako" {
-                expect_success_eq("pub@hako", "Main::accessibility", tree!(
-                    node!("Main::accessibility" => [
-                        leaf!("pub@hako"),
-                    ])
-                ));
-            }
+            expect_success_eq("", "Main::accessibility", tree!(
+                node!("Main::accessibility" => [])
+            ));
         }
     }
 
     describe "identifier" {
-        it "accepts alphabetic start" {
+        it "starts with alphabetic" {
             expect_success_eq("a", "Identifier::identifier", tree!(
                 node!("Identifier::identifier" => [
                     leaf!("a"),
@@ -81,7 +69,11 @@ speculate!{
             ));
         }
 
-        it "accepts multiple characters" {
+        it "does not start with number" {
+            expect_unmatch_failure("0", "Identifier::identifier");
+        }
+
+        it "has multiple kinds of character" {
             expect_success_eq("a0_", "Identifier::identifier", tree!(
                 node!("Identifier::identifier" => [
                     leaf!("a0_"),
@@ -89,15 +81,11 @@ speculate!{
             ));
         }
 
-        it "rejects numeric start" {
-            expect_unmatch_failure("0", "Identifier::identifier");
-        }
-
-        it "rejects reserved keywords" {
+        it "does not match reserved keywords" {
             expect_unmatch_failure("fn", "Identifier::identifier");
         }
 
-        it "accepts characters after reserved keyword" {
+        it "matches characters after reserved keyword" {
             expect_success_eq("fn_", "Identifier::identifier", tree!(
                 node!("Identifier::identifier" => [
                     leaf!("fn_"),
@@ -107,6 +95,14 @@ speculate!{
     }
 
     describe "symbol" {
+        describe "whitespace" {
+            it "matches any kind of whitespace" {
+                expect_success_eq(" ", "Symbol::whitespace", tree!(
+                    node!("Symbol::whitespace" => [leaf!(" ")])
+                ));
+            }
+        }
+
         describe "expression separator" {
             it "accepts zero or more whitespaces around expression separator" {
                 expect_success("\n", "Symbol::expression_separator");

@@ -33,165 +33,220 @@ speculate!{
             assert_ast(input, rule_id, Err(expected));
     }
 
+    describe "item" {
+        it "matches function" {
+            expect_success_eq("fn f() {}", "Item::item", tree!(
+                node!("Item::item" => [
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ]),
+                ])
+            ));
+        }
+    }
+
     describe "function" {
-        it "can specify pub keyword optionally" {
-            expect_success("pub fn f() {}", "Function::function");
+        describe "accessibility" {
+            it "specifies accessibility optionally" {
+                expect_success("pub fn f() {}", "Function::function");
+                expect_success("fn f() {}", "Function::function");
+            }
 
-            expect_success("fn f() {}", "Function::function");
+            it "has accessibility node" {
+                expect_success_eq("fn f() {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ])
+                ));
+
+                expect_success_eq("pub fn f() {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => [leaf!("pub")]),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
         }
 
-        it "accepts zero arguments and zero expressions" {
-            expect_success_eq("fn f() {}", "Function::function", tree!(
-                node!("Function::function" => [
-                    node!("Main::accessibility" => []),
-                    node!("Identifier::identifier" => [
-                        leaf!("f"),
-                    ]),
-                    node!("args" => []),
-                    node!("exprs" => []),
-                ])
-            ));
-        }
+        describe "argument" {
+            it "has no argument and expression" {
+                expect_success_eq("fn f() {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
 
-        it "rejects only one argument separator" {
-            expect_unmatch_failure("fn f(,) {}", "Function::function");
-        }
+            it "has zero or more arguments" {
+                expect_success_eq("fn f() {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ])
+                ));
 
-        it "accepts multiple arguments" {
-            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
-                node!("Function::function" => [
-                    node!("Main::accessibility" => []),
-                    node!("Identifier::identifier" => [
-                        leaf!("f"),
-                    ]),
-                    node!("args" => [
-                        node!("Function::formal_argument" => [
-                            node!("Identifier::identifier" => [
-                                leaf!("a"),
+                expect_success_eq("fn f(a usize, b usize) {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => [
+                            node!("Function::formal_argument" => [
+                                node!("Identifier::identifier" => [
+                                    leaf!("a"),
+                                ]),
+                                node!("DataType::data_type" => [
+                                    node!("DataType::primitive" => [
+                                        leaf!("usize"),
+                                    ]),
+                                ]),
                             ]),
-                            node!("DataType::data_type" => [
-                                node!("DataType::primitive" => [
-                                    leaf!("usize"),
+                            node!("Function::formal_argument" => [
+                                node!("Identifier::identifier" => [
+                                    leaf!("b"),
+                                ]),
+                                node!("DataType::data_type" => [
+                                    node!("DataType::primitive" => [
+                                        leaf!("usize"),
+                                    ]),
                                 ]),
                             ]),
                         ]),
-                        node!("Function::formal_argument" => [
-                            node!("Identifier::identifier" => [
-                                leaf!("b"),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
+
+            it "does not allow separator with no argument" {
+                expect_unmatch_failure("fn f(,) {}", "Function::function");
+            }
+
+            it "does not allow separator at start" {
+                expect_unmatch_failure("fn f(, a usize) {}", "Function::function");
+            }
+
+            it "allows separator at the end" {
+                expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [
+                            leaf!("f"),
+                        ]),
+                        node!("args" => [
+                            node!("Function::formal_argument" => [
+                                node!("Identifier::identifier" => [
+                                    leaf!("a"),
+                                ]),
+                                node!("DataType::data_type" => [
+                                    node!("DataType::primitive" => [
+                                        leaf!("usize"),
+                                    ]),
+                                ]),
                             ]),
-                            node!("DataType::data_type" => [
-                                node!("DataType::primitive" => [
-                                    leaf!("usize"),
+                            node!("Function::formal_argument" => [
+                                node!("Identifier::identifier" => [
+                                    leaf!("b"),
+                                ]),
+                                node!("DataType::data_type" => [
+                                    node!("DataType::primitive" => [
+                                        leaf!("usize"),
+                                    ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                    node!("exprs" => []),
-                ])
-            ));
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
         }
 
-        it "accepts argument separator at the end" {
-            expect_success_eq("fn f(a usize, b usize, ) {}", "Function::function", tree!(
-                node!("Function::function" => [
-                    node!("Main::accessibility" => []),
-                    node!("Identifier::identifier" => [
-                        leaf!("f"),
-                    ]),
-                    node!("args" => [
-                        node!("Function::formal_argument" => [
-                            node!("Identifier::identifier" => [
-                                leaf!("a"),
-                            ]),
-                            node!("DataType::data_type" => [
-                                node!("DataType::primitive" => [
-                                    leaf!("usize"),
-                                ]),
-                            ]),
-                        ]),
-                        node!("Function::formal_argument" => [
-                            node!("Identifier::identifier" => [
-                                leaf!("b"),
-                            ]),
-                            node!("DataType::data_type" => [
-                                node!("DataType::primitive" => [
-                                    leaf!("usize"),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                    node!("exprs" => []),
-                ])
-            ));
-        }
+        describe "expression" {
+            it "has zero or more expressions" {
+                expect_success_eq("fn f() {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ])
+                ));
 
-        it "can contain a single expression in a line" {
-            expect_success_eq("fn f() {0}", "Function::function", tree!(
-                node!("Function::function" => [
-                    node!("Main::accessibility" => []),
-                    node!("Identifier::identifier" => [
-                        leaf!("f"),
-                    ]),
-                    node!("args" => []),
-                    node!("exprs" => [
-                        node!("Expression::expression" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("0"),
+                expect_success_eq("fn f() {0}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [
+                            leaf!("f"),
+                        ]),
+                        node!("args" => []),
+                        node!("exprs" => [
+                            node!("Expression::expression" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("0"),
+                                            ]),
                                         ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                    ]),
-                ])
-            ));
-        }
+                    ])
+                ));
 
-        it "accepts expression separators around a single expression" {
-            expect_success("fn f() { ;\n0 ;\n}", "Function::function");
-        }
-
-        it "can contain multiple expressions in lines" {
-            expect_success_eq("fn f() {0\n0}", "Function::function", tree!(
-                node!("Function::function" => [
-                    node!("Main::accessibility" => []),
-                    node!("Identifier::identifier" => [
-                        leaf!("f"),
-                    ]),
-                    node!("args" => []),
-                    node!("exprs" => [
-                        node!("Expression::expression" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("0"),
+                expect_success_eq("fn f() {0\n0}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => [
+                            node!("Expression::expression" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("0"),
+                                            ]),
+                                        ]),
+                                    ]),
+                                ]),
+                            ]),
+                            node!("Expression::expression" => [
+                                node!("Literal::literal" => [
+                                    node!("Literal::number" => [
+                                        node!("value" => [
+                                            node!("Literal::decimal_number" => [
+                                                leaf!("0"),
+                                            ]),
                                         ]),
                                     ]),
                                 ]),
                             ]),
                         ]),
-                        node!("Expression::expression" => [
-                            node!("Literal::literal" => [
-                                node!("Literal::number" => [
-                                    node!("value" => [
-                                        node!("Literal::decimal_number" => [
-                                            leaf!("0"),
-                                        ]),
-                                    ]),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                ])
-            ));
-        }
+                    ])
+                ));
+            }
 
-        it "accepts expression separators around multiple expressions" {
-            expect_success("fn f() {\n0\n0\n}", "Function::function");
+            it "separated by expression separator" {
+                expect_success("fn f() {0\n0}", "Function::function");
+                expect_success("fn f() {0;0}", "Function::function");
+            }
+
+            it "allows separators and whitespaces around expression" {
+                expect_success("fn f() { ;\n0 ;\n}", "Function::function");
+            }
         }
     }
 }
