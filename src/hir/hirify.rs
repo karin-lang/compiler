@@ -1,6 +1,7 @@
 use volt::tree::*;
-use crate::hir::{*, expr::*, item::*, path::*};
-use super::operator::OperationParser;
+use crate::ast::operator::OperationParser;
+use super::*;
+use super::ir::{expr::*, item::*, path::*};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct AstHako<'a> {
@@ -16,15 +17,15 @@ pub struct AstModule<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct TreeAnalysis {
+pub struct TreeHirifier {
     path_index_generator: HirPathIndexGenerator,
     pub(crate) path_tree: HirPathTree,
     pub(crate) items: Vec<HirPathIndexBinding<HirItem>>,
 }
 
-impl TreeAnalysis {
-    pub fn new() -> TreeAnalysis {
-        TreeAnalysis {
+impl TreeHirifier {
+    pub fn new() -> TreeHirifier {
+        TreeHirifier {
             path_index_generator: HirPathIndexGenerator::new(),
             path_tree: HirPathTree::new(),
             items: Vec::new(),
@@ -32,7 +33,7 @@ impl TreeAnalysis {
     }
 
     pub fn analyze(hakos: Vec<&AstHako>) -> Hir {
-        let mut analyzer = TreeAnalysis::new();
+        let mut analyzer = TreeHirifier::new();
 
         for each_hako in &hakos {
             analyzer.hako(each_hako);

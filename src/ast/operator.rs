@@ -1,4 +1,4 @@
-use crate::hir::{expr::*, path::HirPath};
+use crate::hir::ir::{expr::*, path::HirPath};
 
 pub type OperationParserResult<T> = Result<T, OperationParserError>;
 

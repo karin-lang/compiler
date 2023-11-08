@@ -1,5 +1,5 @@
 use speculate::speculate;
-use crate::hir::expr::*;
+use crate::hir::ir::expr::*;
 use crate::ast::operator::OperationParser;
 
 speculate!{

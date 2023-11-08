@@ -1,4 +1,5 @@
-use crate::js::{code::JsCodeGenerator, ir::*};
+use crate::js::code::JsCodeGenerator;
+use crate::js::ir::{*, item::*, stmt::*};
 use speculate::speculate;
 
 speculate!{

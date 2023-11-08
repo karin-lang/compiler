@@ -1,4 +1,4 @@
-use crate::js::ir::*;
+use super::ir::{*, item::*, stmt::*};
 
 pub struct JsCodeGenerator {}
 

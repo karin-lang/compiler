@@ -1,4 +1,4 @@
-use crate::hir::path::*;
+use crate::hir::ir::path::*;
 use speculate::speculate;
 
 speculate!{

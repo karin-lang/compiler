@@ -1,12 +1,12 @@
 pub mod code;
-pub mod generate;
 pub mod ir;
+pub mod jsify;
 
 use volt::parser::ParserError;
-use crate::ast::tree::{TreeAnalysis, AstHako, AstModule};
+use crate::hir::hirify::{TreeHirifier, AstHako, AstModule};
 use crate::hir::type_check::DataTypeChecker;
 use crate::{Compiler, ParserResult, Syntax, RuleId};
-use crate::js::generate::JsGenerator;
+use crate::js::jsify::JsGenerator;
 use crate::js::code::JsCodeGenerator;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -33,7 +33,7 @@ impl Compiler<&str, Result<String, JsTranspilerError>, JsTranspilerOptions> for 
             Err(e) => return Err(JsTranspilerError::ParserError(e)),
         };
 
-        let mut hir = TreeAnalysis::analyze(vec![
+        let mut hir = TreeHirifier::analyze(vec![
             &AstHako {
                 id: "test".to_string(),
                 modules: vec![

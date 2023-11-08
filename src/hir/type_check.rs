@@ -1,4 +1,4 @@
-use crate::hir::{path::*, item::*, expr::*};
+use crate::hir::ir::{path::*, item::*, expr::*};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum DataTypeError {

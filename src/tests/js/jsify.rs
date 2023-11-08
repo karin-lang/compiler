@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
-use crate::js::{generate::JsGenerator, ir::*};
-use crate::hir::{*, expr::*, item::*, path::*};
+use crate::js::jsify::JsGenerator;
+use crate::js::ir::{item::*, stmt::*};
+use crate::hir::*;
+use crate::hir::ir::{expr::*, item::*, path::*};
 use speculate::speculate;
 
 speculate!{

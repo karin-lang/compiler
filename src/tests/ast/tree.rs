@@ -1,11 +1,13 @@
 use std::collections::BTreeMap;
-use crate::{hir::{*, expr::*, item::*, path::*}, ast::tree::*};
+use crate::hir::*;
+use crate::hir::hirify::*;
+use crate::hir::ir::{expr::*, item::*, path::*};
 use speculate::speculate;
 use volt::{*, tree::*};
 
 speculate!{
     before {
-        let new_analyzer = || TreeAnalysis::new();
+        let new_analyzer = || TreeHirifier::new();
 
         #[allow(unused)]
         let get_operator = |operator: HirOperator|

@@ -1,9 +1,8 @@
-pub mod expr;
-pub mod item;
-pub mod path;
+pub mod hirify;
+pub mod ir;
 pub mod type_check;
 
-use self::{item::*, path::*};
+use self::ir::{item::*, path::*};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Hir {

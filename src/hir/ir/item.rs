@@ -1,4 +1,5 @@
-use super::{*, expr::*};
+use super::expr::*;
+use crate::hir::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirItem {

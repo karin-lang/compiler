@@ -1,5 +1,5 @@
 mod code;
-mod generate;
+mod jsify;
 
 use speculate::speculate;
 

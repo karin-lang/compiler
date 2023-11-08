@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::BTreeMap;
-use super::HirIdentifier;
+use crate::hir::HirIdentifier;
 
 // fix
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]

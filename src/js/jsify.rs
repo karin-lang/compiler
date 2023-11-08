@@ -1,5 +1,6 @@
-use crate::hir::{*, expr::*, item::*, path::*};
-use crate::js::ir::*;
+use crate::hir::*;
+use crate::hir::ir::{expr::*, item::*, path::*};
+use crate::js::ir::{*, item::*, stmt::*};
 
 pub struct JsGenerator<'a> {
     path_tree: &'a HirPathTree,
