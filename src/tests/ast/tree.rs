@@ -372,7 +372,7 @@ speculate!{
                                     leaf!("1"),
                                 ]),
                             ]),
-                            node!("DataType::primitive_number" => [
+                            node!("data_type_suffix" => [
                                 leaf!("usize"),
                             ]),
                         ]),
@@ -406,7 +406,7 @@ speculate!{
                                 node!("float" => [
                                     leaf!("0"),
                                 ]),
-                                node!("DataType::primitive_number" => [
+                                node!("data_type_suffix" => [
                                     leaf!("f32"),
                                 ]),
                             ]),

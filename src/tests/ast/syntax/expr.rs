@@ -490,7 +490,7 @@ speculate!{
                             node!("value" => [
                                 node!("Literal::decimal_number" => [leaf!("0")]),
                             ]),
-                            node!("DataType::primitive_number" => [leaf!("usize")]),
+                            node!("data_type_suffix" => [leaf!("usize")]),
                         ])
                     ));
                 }
@@ -509,7 +509,7 @@ speculate!{
                             node!("value" => [
                                 node!("Literal::decimal_number" => [leaf!("0")]),
                             ]),
-                            node!("DataType::primitive_number" => [leaf!("f32")]),
+                            node!("data_type_suffix" => [leaf!("f32")]),
                         ])
                     ));
                 }
@@ -785,28 +785,29 @@ speculate!{
         describe "float number" {
             describe "data type suffix" {
                 it "ends with float type suffix optionally" {
-                    expect_success_eq("0", "Literal::number", tree!(
+                    expect_success_eq("0.0", "Literal::number", tree!(
                         node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::decimal_number" => [leaf!("0")]),
+                            node!("Literal::float_number" => [
+                                node!("integer" => [leaf!("0")]),
+                                node!("float" => [leaf!("0")]),
                             ]),
                         ])
                     ));
 
-                    expect_success_eq("0f32", "Literal::number", tree!(
+                    expect_success_eq("0.0f32", "Literal::number", tree!(
                         node!("Literal::number" => [
-                            node!("value" => [
-                                node!("Literal::decimal_number" => [leaf!("0")]),
+                            node!("Literal::float_number" => [
+                                node!("integer" => [leaf!("0")]),
+                                node!("float" => [leaf!("0")]),
+                                node!("data_type_suffix" => [leaf!("f32")]),
                             ]),
-                            node!("DataType::primitive_number" => [leaf!("f32")]),
                         ])
                     ));
                 }
 
-                // todo: implement
-                // it "rejects integer type suffix" {
-                //     expect_failure("0usize", "Literal::number");
-                // }
+                it "rejects integer type suffix" {
+                    expect_failure("0.0usize", "Literal::number");
+                }
             }
 
             it "has integer and decimal part" {
@@ -831,7 +832,7 @@ speculate!{
                         node!("Literal::float_number" => [
                             node!("integer" => [leaf!("0")]),
                             node!("float" => [leaf!("0")]),
-                            node!("DataType::primitive_number" => [leaf!("f32")]),
+                            node!("data_type_suffix" => [leaf!("f32")]),
                         ]),
                     ])
                 ));
@@ -941,10 +942,16 @@ speculate!{
                 ));
             }
 
-            it "expands primitive number node" {
+            it "expands integer and float type node" {
                 expect_success_eq("usize", "DataType::data_type", tree!(
                     node!("DataType::data_type" => [
                         node!("DataType::primitive" => [leaf!("usize")]),
+                    ])
+                ));
+
+                expect_success_eq("f32", "DataType::data_type", tree!(
+                    node!("DataType::data_type" => [
+                        node!("DataType::primitive" => [leaf!("f32")]),
                     ])
                 ));
             }

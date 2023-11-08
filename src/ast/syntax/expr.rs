@@ -166,8 +166,7 @@ impl VoltModule for Literal {
                     Literal::decimal_number(),
                 ].group("value"),
                 Literal::number_exponent().optional(),
-                // todo: add float type checker
-                DataType::primitive_number().optional(),
+                DataType::primitive_number().expand_once().group("data_type_suffix").optional(),
             ];
             binary_number := seq![
                 str("0b").hide(),
@@ -189,8 +188,7 @@ impl VoltModule for Literal {
                 Literal::decimal_number_value().expand_once().group("integer"),
                 str(".").hide(),
                 Literal::float_number_value().expand_once().group("float"),
-                // todo: add float type checker
-                DataType::primitive_number().optional(),
+                DataType::float_primitive_number().expand_once().group("data_type_suffix").optional(),
             ];
             float_number_value := choice![chars("0-9"), str("_")].min(1).join().reduce(float_reducer);
         }
@@ -282,6 +280,8 @@ pub(super) struct DataType {
     data_type: Element,
     primitive: Element,
     primitive_number: Element,
+    integer_primitive_number: Element,
+    float_primitive_number: Element,
     generic: Element,
 }
 
@@ -289,9 +289,17 @@ impl VoltModule for DataType {
     fn new() -> DataType {
         define_rules!{
             data_type := choice![DataType::primitive(), DataType::generic()];
-            primitive := choice![DataType::primitive_number().expand_once(), str("char"), str("str")];
-            // add: types
-            primitive_number := choice![str("usize"), str("f32")];
+            // todo: add types
+            primitive := choice![
+                DataType::primitive_number().expand_once(),
+                str("char"), str("str"),
+            ];
+            primitive_number := choice![
+                DataType::integer_primitive_number().expand_once(),
+                DataType::float_primitive_number().expand_once(),
+            ];
+            integer_primitive_number := choice![str("usize")];
+            float_primitive_number := choice![str("f32")];
             generic := seq![
                 Identifier::identifier().expand_once().group("Identifier::identifier"), WHITESPACE(),
                 str("<").hide(), WHITESPACE(),

@@ -181,7 +181,7 @@ impl TreeHirifier {
                 let float_number_node = content.children.get_node(0);
 
                 if float_number_node.name == "Literal::float_number" {
-                    let data_type = match float_number_node.children.find_node_or_none("DataType::primitive_number") {
+                    let data_type = match float_number_node.children.find_node_or_none("data_type_suffix") {
                         Some(v) => Some(self.primitive_data_type(v)),
                         None => None,
                     };
@@ -192,7 +192,7 @@ impl TreeHirifier {
 
                     HirLiteral::Float(HirFloatLiteral { data_type, value })
                 } else {
-                    let data_type = match content.children.find_node_or_none("DataType::primitive_number") {
+                    let data_type = match content.children.find_node_or_none("data_type_suffix") {
                         Some(v) => Some(self.primitive_data_type(v)),
                         None => None,
                     };
@@ -298,7 +298,6 @@ impl TreeHirifier {
         }
     }
 
-    // Also available to DataType::primitive_number rule.
     pub fn primitive_data_type(&mut self, node: &SyntaxNode) -> HirPrimitiveDataType {
         match node.children.get_leaf(0).value.as_str() {
             "usize" => HirPrimitiveDataType::Usize,
