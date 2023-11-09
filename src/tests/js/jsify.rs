@@ -27,6 +27,7 @@ speculate!{
                 let item = HirItem::Function(
                     HirFunction {
                         accessibility: HirAccessibility::Private,
+                        return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
                         arguments: vec![
                             HirIdentifierBinding::new(
                                 "a".into(),

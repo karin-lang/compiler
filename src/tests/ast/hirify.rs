@@ -108,9 +108,7 @@ speculate!{
                 node!("Item::item" => [
                     node!("Function::function" => [
                         node!("Main::accessibility" => []),
-                        node!("Identifier::identifier" => [
-                            leaf!("f"),
-                        ]),
+                        node!("Identifier::identifier" => [leaf!("f")]),
                         node!("args" => []),
                         node!("exprs" => []),
                     ]),
@@ -174,6 +172,7 @@ speculate!{
                     HirItem::Function(
                         HirFunction {
                             accessibility: HirAccessibility::Private,
+                            return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
                             arguments: Vec::new(),
                             expressions: Vec::new(),
                         }
@@ -377,6 +376,7 @@ speculate!{
                         HirItem::Function(
                             HirFunction {
                                 accessibility: HirAccessibility::Private,
+                                return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
                                 arguments: Vec::new(),
                                 expressions: Vec::new(),
                             },
@@ -473,6 +473,7 @@ speculate!{
                     "f".to_string(),
                     HirFunction {
                         accessibility: HirAccessibility::Private,
+                        return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
                         arguments: Vec::new(),
                         expressions: Vec::new(),
                     },
@@ -513,6 +514,7 @@ speculate!{
                     "f".to_string(),
                     HirFunction {
                         accessibility: HirAccessibility::Private,
+                        return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
                         arguments: vec![
                             HirIdentifierBinding::new(
                                 "a".into(),
@@ -530,53 +532,50 @@ speculate!{
             );
         }
 
-        // todo: uncomment
-        // it "has return type optionally" {
-        //     assert_eq!(
-        //         new_analyzer().function(
-        //             node!("Function::function" => [
-        //                 node!("Main::accessibility" => []),
-        //                 node!("Identifier::identifier" => [leaf!("f")]),
-        //                 node!("args" => []),
-        //                 node!("exprs" => []),
-        //             ]).into_node(),
-        //         ),
-        //         (
-        //             "f".to_string(),
-        //             HirFunction {
-        //                 accessibility: HirAccessibility::Private,
-        //                 return_type: None,
-        //                 arguments: Vec::new(),
-        //                 expressions: Vec::new(),
-        //             },
-        //         ),
-        //     );
+        it "has return type optionally" {
+            assert_eq!(
+                new_analyzer().function(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ]).into_node(),
+                ),
+                (
+                    "f".to_string(),
+                    HirFunction {
+                        accessibility: HirAccessibility::Private,
+                        return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
+                        arguments: Vec::new(),
+                        expressions: Vec::new(),
+                    },
+                ),
+            );
 
-        //     assert_eq!(
-        //         new_analyzer().function(
-        //             node!("Function::function" => [
-        //                 node!("Main::accessibility" => []),
-        //                 node!("Identifier::identifier" => [leaf!("f")]),
-        //                 node!("args" => []),
-        //                 node!("DataType::data_type" => [
-        //                     node!("DataType::primitive" => [
-        //                         leaf!("usize"),
-        //                     ]),
-        //                 ]),
-        //                 node!("exprs" => []),
-        //             ]).into_node(),
-        //         ),
-        //         (
-        //             "f".to_string(),
-        //             HirFunction {
-        //                 accessibility: HirAccessibility::Private,
-        //                 return_type: Some(...),
-        //                 arguments: Vec::new(),
-        //                 expressions: Vec::new(),
-        //             },
-        //         ),
-        //     );
-        // }
+            assert_eq!(
+                new_analyzer().function(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("DataType::data_type" => [
+                            node!("DataType::primitive" => [leaf!("usize")]),
+                        ]),
+                        node!("exprs" => []),
+                    ]).into_node(),
+                ),
+                (
+                    "f".to_string(),
+                    HirFunction {
+                        accessibility: HirAccessibility::Private,
+                        return_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                        arguments: Vec::new(),
+                        expressions: Vec::new(),
+                    },
+                ),
+            );
+        }
 
         describe "formal argument" {
             it "has name and data type" {

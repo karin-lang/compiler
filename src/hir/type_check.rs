@@ -33,6 +33,7 @@ impl<'a> DataTypeChecker<'a> {
         // todo: add PathBinding<HirItem>
         match item {
             HirItem::Function(function) => {
+                // todo: check return type
                 for each_expr in &mut function.expressions {
                     self.expression(each_expr);
                 }

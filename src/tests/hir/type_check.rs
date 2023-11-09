@@ -24,6 +24,7 @@ speculate!{
             let mut item = HirItem::Function(
                 HirFunction {
                     accessibility: HirAccessibility::Private,
+                    return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
                     arguments: Vec::new(),
                     expressions: vec![
                         HirExpression::Operation(

@@ -132,7 +132,10 @@ impl TreeHirifier {
         let id = self.identifier(&node.children.find_node("Identifier::identifier"));
         let accessibility = self.accessibility(node.children.find_node("Main::accessibility"));
 
-        // todo: add return type
+        let return_type = match node.children.find_node_or_none("DataType::data_type") {
+            Some(v) => self.data_type(v),
+            None => HirDataType::Primitive(HirPrimitiveDataType::None),
+        };
 
         let arguments = node.children.find_node("args").children.filter_nodes().iter()
             .map(|v| self.formal_argument(v)).collect();
@@ -140,14 +143,14 @@ impl TreeHirifier {
         let expressions = node.children.find_node("exprs").children.filter_nodes().iter()
             .map(|v| self.expression(v)).collect();
 
-        (id, HirFunction { accessibility, arguments, expressions })
+        (id, HirFunction { accessibility, return_type, arguments, expressions })
     }
 
     pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirIdentifierBinding<HirFormalArgument> {
         let id = self.identifier(node.children.find_node("Identifier::identifier"));
         let data_type = self.data_type(node.children.find_node("DataType::data_type"));
 
-        // todo: add mutability, reference and self
+        // todo: add mutability and self
 
         HirIdentifierBinding::new(
             id.into(),

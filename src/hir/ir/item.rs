@@ -12,6 +12,7 @@ pub enum HirItem {
 #[derive(Clone, Debug, PartialEq)]
 pub struct HirFunction {
     pub accessibility: HirAccessibility,
+    pub return_type: HirDataType,
     pub arguments: Vec<HirIdentifierBinding<HirFormalArgument>>,
     pub expressions: Vec<HirExpression>,
 }
