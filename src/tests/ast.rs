@@ -1,3 +1,3 @@
+mod hirify;
 mod operator;
 mod syntax;
-mod tree;
