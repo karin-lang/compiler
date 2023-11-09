@@ -930,6 +930,26 @@ speculate!{
                 }
             }
         }
+
+        describe "self literal" {
+            it "matches self" {
+                expect_success_eq("self", "Literal::literal", tree!(
+                    node!("Literal::literal" => [
+                        node!("self" => [leaf!("self")]),
+                    ])
+                ));
+            }
+        }
+
+        describe "none" {
+            it "matches none" {
+                expect_success_eq("none", "Literal::literal", tree!(
+                    node!("Literal::literal" => [
+                        node!("none" => [leaf!("none")]),
+                    ])
+                ));
+            }
+        }
     }
 
     describe "data type" {

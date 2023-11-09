@@ -287,6 +287,8 @@ impl TreeHirifier {
                     HirLiteral::Integer(HirIntegerLiteral { data_type, base, value, exponent })
                 }
             },
+            "self" => HirLiteral::SelfValue,
+            "none" => HirLiteral::None,
             _ => unreachable!("unknown literal"),
         }
     }

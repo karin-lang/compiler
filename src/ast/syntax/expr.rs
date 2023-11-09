@@ -151,7 +151,12 @@ impl VoltModule for Literal {
         };
 
         define_rules!{
-            literal := choice![Literal::boolean(), Literal::number()];
+            literal := choice![
+                Literal::boolean(),
+                Literal::number(),
+                str("self").group("self"),
+                str("none").group("none"),
+            ];
             boolean := choice![str("true"), str("false")];
             number := choice![
                 Literal::float_number(),

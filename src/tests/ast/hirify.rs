@@ -988,6 +988,32 @@ speculate!{
                 );
             }
         }
+
+        describe "self literal" {
+            it "hirifies self" {
+                assert_eq!(
+                    new_analyzer().literal(
+                        node!("Literal::literal" => [
+                            node!("self" => [leaf!("self")]),
+                        ]).into_node(),
+                    ),
+                    HirLiteral::SelfValue,
+                );
+            }
+        }
+
+        describe "none" {
+            it "hirifies none" {
+                assert_eq!(
+                    new_analyzer().literal(
+                        node!("Literal::literal" => [
+                            node!("none" => [leaf!("none")]),
+                        ]).into_node(),
+                    ),
+                    HirLiteral::None,
+                );
+            }
+        }
     }
 
     describe "data type" {

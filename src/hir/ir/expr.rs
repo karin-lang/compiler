@@ -14,6 +14,8 @@ pub enum HirLiteral {
     Integer(HirIntegerLiteral),
     Float(HirFloatLiteral),
     String(String),
+    SelfValue,
+    None,
 }
 
 #[derive(Clone, Debug, PartialEq)]
