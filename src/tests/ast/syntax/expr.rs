@@ -963,7 +963,7 @@ speculate!{
                     node!("DataType::data_type" => [
                         node!("DataType::generic" => [
                             node!("Identifier::identifier" => [leaf!("t")]),
-                            node!("args" => [
+                            node!("DataType::generic_arguments" => [
                                 node!("Identifier::identifier" => [leaf!("T1")]),
                                 node!("Identifier::identifier" => [leaf!("T2")]),
                             ]),
@@ -977,11 +977,11 @@ speculate!{
                     node!("DataType::data_type" => [
                         node!("DataType::generic" => [
                             node!("Identifier::identifier" => [leaf!("t")]),
-                            node!("args" => [
+                            node!("DataType::generic_arguments" => [
                                 node!("DataType::data_type" => [
                                     node!("DataType::generic" => [
                                         node!("Identifier::identifier" => [leaf!("t")]),
-                                        node!("args" => [
+                                        node!("DataType::generic_arguments" => [
                                             node!("Identifier::identifier" => [leaf!("T")]),
                                         ]),
                                     ]),

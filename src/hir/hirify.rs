@@ -283,15 +283,7 @@ impl TreeHirifier {
             "DataType::primitive" => HirDataType::Primitive(self.primitive_data_type(content)),
             "DataType::generic" => {
                 let id = content.children.find_node("Identifier::identifier").children.get_leaf(0).value.clone();
-                let argument_nodes = &content.children.find_node("args").children.filter_nodes();
-                let arguments = argument_nodes.iter().map(|data_type_node| {
-                    match data_type_node.name.as_str() {
-                        // fix: replace identifier to path
-                        "Identifier::identifier" => HirDataType::Identifier(data_type_node.children.get_leaf(0).value.clone().into()),
-                        "DataType::data_type" => self.data_type(data_type_node),
-                        _ => unreachable!("unknown argument format in generic data type"),
-                    }
-                }).collect();
+                let arguments = self.generic_arguments(&content.children.find_node("DataType::generic_arguments"));
                 HirDataType::Generic(HirIdentifierBinding::new(id.into(), HirGenericDataType { arguments }))
             },
             _ => unreachable!("unknown data type"),
@@ -304,5 +296,16 @@ impl TreeHirifier {
             "f32" => HirPrimitiveDataType::F32,
             _ => unreachable!("unknown primitive data type"),
         }
+    }
+
+    pub fn generic_arguments(&mut self, node: &SyntaxNode) -> Vec<HirDataType> {
+        node.children.filter_nodes().iter().map(|data_type_node| {
+            match data_type_node.name.as_str() {
+                // fix: replace identifier to path
+                "Identifier::identifier" => HirDataType::Identifier(data_type_node.children.get_leaf(0).value.clone().into()),
+                "DataType::data_type" => self.data_type(data_type_node),
+                _ => unreachable!("unknown argument format in generic data type"),
+            }
+        }).collect()
     }
 }

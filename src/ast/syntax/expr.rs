@@ -283,6 +283,7 @@ pub(super) struct DataType {
     integer_primitive_number: Element,
     float_primitive_number: Element,
     generic: Element,
+    generic_arguments: Element,
 }
 
 impl VoltModule for DataType {
@@ -306,8 +307,11 @@ impl VoltModule for DataType {
             float_primitive_number := choice![str("f32"), str("f64")];
             generic := seq![
                 Identifier::identifier().expand_once().group("Identifier::identifier"), WHITESPACE(),
+                DataType::generic_arguments(),
+            ];
+            generic_arguments := seq![
                 str("<").hide(), WHITESPACE(),
-                choice![DataType::data_type(), Identifier::identifier().expand_once().group("Identifier::identifier")].separate(str(",").separate_around(WHITESPACE()).hide()).group("args"),
+                choice![DataType::data_type(), Identifier::identifier().expand_once().group("Identifier::identifier")].separate(str(",").separate_around(WHITESPACE()).hide()),
                 str(">").hide(),
             ];
         }
