@@ -248,5 +248,32 @@ speculate!{
                 expect_success("fn f() { ;\n0 ;\n}", "Function::function");
             }
         }
+
+        describe "return type" {
+            it "has return type optionally" {
+                expect_success_eq("fn f() {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("exprs" => []),
+                    ])
+                ));
+
+                expect_success_eq("fn f() usize {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => []),
+                        node!("DataType::data_type" => [
+                            node!("DataType::primitive" => [
+                                leaf!("usize"),
+                            ]),
+                        ]),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
+        }
     }
 }

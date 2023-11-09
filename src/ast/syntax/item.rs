@@ -32,6 +32,7 @@ impl VoltModule for Function {
                 str("(").hide(), WHITESPACE(),
                 Function::formal_argument().separate(str(",").separate_around(WHITESPACE()).hide()).optional().group("args"), WHITESPACE(),
                 str(")").hide(), WHITESPACE(),
+                DataType::data_type().optional(), WHITESPACE(),
                 str("{").hide(), WHITESPACE(),
                 Expression::expression().separate_around(Symbol::expression_separator().min(0).hide()).optional().group("exprs"), WHITESPACE(),
                 str("}").hide(),
