@@ -111,6 +111,7 @@ pub enum HirPrimitiveDataType {
     F64,
     Character,
     String,
+    SelfType,
     None,
 }
 

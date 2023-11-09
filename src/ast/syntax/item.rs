@@ -37,7 +37,17 @@ impl VoltModule for Function {
                 Expression::expression().separate_around(Symbol::expression_separator().min(0).hide()).optional().group("exprs"), WHITESPACE(),
                 str("}").hide(),
             ];
-            formal_argument := seq![Identifier::identifier(), WHITESPACE(), DataType::data_type()];
+            formal_argument := seq![
+                seq![str("mut"), WHITESPACE_REQUIRED()].optional(),
+                choice![
+                    str("self"),
+                    seq![
+                        Identifier::identifier(),
+                        WHITESPACE_REQUIRED(),
+                        DataType::data_type(),
+                    ],
+                ],
+            ];
         }
     }
 }

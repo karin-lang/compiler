@@ -104,24 +104,64 @@ speculate!{
                         node!("Identifier::identifier" => [leaf!("f")]),
                         node!("args" => [
                             node!("Function::formal_argument" => [
-                                node!("Identifier::identifier" => [
-                                    leaf!("a"),
-                                ]),
+                                node!("Identifier::identifier" => [leaf!("a")]),
                                 node!("DataType::data_type" => [
-                                    node!("DataType::primitive" => [
-                                        leaf!("usize"),
-                                    ]),
+                                    node!("DataType::primitive" => [leaf!("usize")]),
                                 ]),
                             ]),
                             node!("Function::formal_argument" => [
-                                node!("Identifier::identifier" => [
-                                    leaf!("b"),
-                                ]),
+                                node!("Identifier::identifier" => [leaf!("b")]),
                                 node!("DataType::data_type" => [
-                                    node!("DataType::primitive" => [
-                                        leaf!("usize"),
-                                    ]),
+                                    node!("DataType::primitive" => [leaf!("usize")]),
                                 ]),
+                            ]),
+                        ]),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
+
+            it "allows self argument" {
+                expect_success_eq("fn f(self) {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => [
+                            node!("Function::formal_argument" => [leaf!("self")]),
+                        ]),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
+
+            it "makes an argument mutable" {
+                expect_success_eq("fn f(mut a usize) {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => [
+                            node!("Function::formal_argument" => [
+                                leaf!("mut"),
+                                node!("Identifier::identifier" => [leaf!("a")]),
+                                node!("DataType::data_type" => [
+                                    node!("DataType::primitive" => [leaf!("usize")]),
+                                ]),
+                            ]),
+                        ]),
+                        node!("exprs" => []),
+                    ])
+                ));
+            }
+
+            it "makes self mutable" {
+                expect_success_eq("fn f(mut self) {}", "Function::function", tree!(
+                    node!("Function::function" => [
+                        node!("Main::accessibility" => []),
+                        node!("Identifier::identifier" => [leaf!("f")]),
+                        node!("args" => [
+                            node!("Function::formal_argument" => [
+                                leaf!("mut"),
+                                leaf!("self"),
                             ]),
                         ]),
                         node!("exprs" => []),
@@ -146,9 +186,7 @@ speculate!{
                         ]),
                         node!("args" => [
                             node!("Function::formal_argument" => [
-                                node!("Identifier::identifier" => [
-                                    leaf!("a"),
-                                ]),
+                                node!("Identifier::identifier" => [leaf!("a")]),
                                 node!("DataType::data_type" => [
                                     node!("DataType::primitive" => [
                                         leaf!("usize"),
@@ -156,13 +194,9 @@ speculate!{
                                 ]),
                             ]),
                             node!("Function::formal_argument" => [
-                                node!("Identifier::identifier" => [
-                                    leaf!("b"),
-                                ]),
+                                node!("Identifier::identifier" => [leaf!("b")]),
                                 node!("DataType::data_type" => [
-                                    node!("DataType::primitive" => [
-                                        leaf!("usize"),
-                                    ]),
+                                    node!("DataType::primitive" => [leaf!("usize")]),
                                 ]),
                             ]),
                         ]),

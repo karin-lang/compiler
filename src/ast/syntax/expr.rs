@@ -294,7 +294,7 @@ impl VoltModule for DataType {
             // todo: add tuple, vector, etc
             primitive := choice![
                 DataType::primitive_number().expand_once(),
-                str("bool"), str("char"), str("str"), str("none"),
+                str("bool"), str("char"), str("str"), str("Self"), str("none"),
             ];
             primitive_number := choice![
                 DataType::integer_primitive_number().expand_once(),

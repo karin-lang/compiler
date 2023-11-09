@@ -147,16 +147,25 @@ impl TreeHirifier {
     }
 
     pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirIdentifierBinding<HirFormalArgument> {
-        let id = self.identifier(node.children.find_node("Identifier::identifier"));
-        let data_type = self.data_type(node.children.find_node("DataType::data_type"));
+        let (id, data_type) = if let Some(id_node) = node.children.find_node_or_none("Identifier::identifier") {
+            (self.identifier(id_node), self.data_type(node.children.find_node("DataType::data_type")))
+        } else if node.children.has_leaf("self") {
+            ("self".to_string(), HirDataType::Primitive(HirPrimitiveDataType::SelfType))
+        } else {
+            unreachable!("formal argument must have an identifier or self keyword");
+        };
 
-        // todo: add mutability and self
+        let mutability = if node.children.has_leaf("mut") {
+            HirMutability::Mutable
+        } else {
+            HirMutability::Immutable
+        };
 
         HirIdentifierBinding::new(
             id.into(),
             HirFormalArgument {
                 // todo: 構文ノードのmutabilityを反映させる
-                mutability: HirMutability::Immutable,
+                mutability,
                 data_type,
             },
         )
@@ -313,6 +322,7 @@ impl TreeHirifier {
             "f64" => HirPrimitiveDataType::F64,
             "char" => HirPrimitiveDataType::Character,
             "str" => HirPrimitiveDataType::String,
+            "Self" => HirPrimitiveDataType::SelfType,
             "none" => HirPrimitiveDataType::None,
             _ => unreachable!("unknown primitive data type"),
         }

@@ -25,6 +25,7 @@ impl Syntax {
 }
 
 const WHITESPACE: fn() -> Element = || Symbol::whitespace().min(0).hide();
+const WHITESPACE_REQUIRED: fn() -> Element = || Symbol::whitespace().min(1).hide();
 
 #[derive(VoltModuleDefinition)]
 struct Main {

@@ -598,47 +598,59 @@ speculate!{
                 );
             }
 
-            // todo: uncomment
-            // it "identifies argument as immutable by default" {
-            //     assert_eq!(
-            //         new_analyzer().formal_argument(
-            //             node!("Function::formal_argument" => [
-            //                 node!("Identifier::identifier" => [
-            //                     leaf!("a"),
-            //                 ]),
-            //                 node!("DataType::data_type" => [
-            //                     node!("DataType::primitive" => [leaf!("usize")]),
-            //                 ]),
-            //             ]).into_node(),
-            //         ),
-            //         HirIdentifierBinding::new(
-            //             "a".into(),
-            //             HirFormalArgument {
-            //                 mutability: HirMutability::Immutable,
-            //                 data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
-            //             },
-            //         ),
-            //     );
+            it "identifies argument as immutable by default" {
+                assert_eq!(
+                    new_analyzer().formal_argument(
+                        node!("Function::formal_argument" => [
+                            node!("Identifier::identifier" => [leaf!("a")]),
+                            node!("DataType::data_type" => [
+                                node!("DataType::primitive" => [leaf!("usize")]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirIdentifierBinding::new(
+                        "a".into(),
+                        HirFormalArgument {
+                            mutability: HirMutability::Immutable,
+                            data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                        },
+                    ),
+                );
 
-            //     // todo: add mutability
-            //     assert_eq!(
-            //         new_analyzer().formal_argument(
-            //             node!("Function::formal_argument" => [
-            //                 node!("Identifier::identifier" => [leaf!("a")]),
-            //                 node!("DataType::data_type" => [
-            //                     node!("DataType::primitive" => [leaf!("usize")]),
-            //                 ]),
-            //             ]).into_node(),
-            //         ),
-            //         HirIdentifierBinding::new(
-            //             "a".into(),
-            //             HirFormalArgument {
-            //                 mutability: HirMutability::Immutable,
-            //                 data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
-            //             },
-            //         ),
-            //     );
-            // }
+                assert_eq!(
+                    new_analyzer().formal_argument(
+                        node!("Function::formal_argument" => [
+                            leaf!("mut"),
+                            node!("Identifier::identifier" => [leaf!("a")]),
+                            node!("DataType::data_type" => [
+                                node!("DataType::primitive" => [leaf!("usize")]),
+                            ]),
+                        ]).into_node(),
+                    ),
+                    HirIdentifierBinding::new(
+                        "a".into(),
+                        HirFormalArgument {
+                            mutability: HirMutability::Mutable,
+                            data_type: HirDataType::Primitive(HirPrimitiveDataType::Usize),
+                        },
+                    ),
+                );
+            }
+
+            it "associates Self type with self argument" {
+                assert_eq!(
+                    new_analyzer().formal_argument(
+                        node!("Function::formal_argument" => [leaf!("self")]).into_node(),
+                    ),
+                    HirIdentifierBinding::new(
+                        "self".into(),
+                        HirFormalArgument {
+                            mutability: HirMutability::Immutable,
+                            data_type: HirDataType::Primitive(HirPrimitiveDataType::SelfType),
+                        },
+                    ),
+                );
+            }
         }
     }
 
