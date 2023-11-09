@@ -33,7 +33,7 @@ speculate!{
 
     describe "hirify" {
         it "generates child paths" {
-            let hir = TreeHirifier::hirify(vec![
+            let (hir, _) = TreeHirifier::hirify(vec![
                 &AstHako {
                     id: "h".to_string(),
                     modules: Vec::new(),
@@ -60,7 +60,7 @@ speculate!{
         }
 
         it "generates submodule paths" {
-            let hir = TreeHirifier::hirify(vec![
+            let (hir, _) = TreeHirifier::hirify(vec![
                 &AstHako {
                     id: "h".to_string(),
                     modules: vec![
@@ -115,7 +115,7 @@ speculate!{
                 ]),
             ]);
 
-            let hir = TreeHirifier::hirify(vec![
+            let (hir, _) = TreeHirifier::hirify(vec![
                 &AstHako {
                     id: "h".to_string(),
                     modules: vec![
@@ -581,6 +581,7 @@ speculate!{
             it "has name and data type" {
                 assert_eq!(
                     new_analyzer().formal_argument(
+                        0,
                         node!("Function::formal_argument" => [
                             node!("Identifier::identifier" => [leaf!("a")]),
                             node!("DataType::data_type" => [
@@ -601,6 +602,7 @@ speculate!{
             it "identifies argument as immutable by default" {
                 assert_eq!(
                     new_analyzer().formal_argument(
+                        0,
                         node!("Function::formal_argument" => [
                             node!("Identifier::identifier" => [leaf!("a")]),
                             node!("DataType::data_type" => [
@@ -619,6 +621,7 @@ speculate!{
 
                 assert_eq!(
                     new_analyzer().formal_argument(
+                        0,
                         node!("Function::formal_argument" => [
                             leaf!("mut"),
                             node!("Identifier::identifier" => [leaf!("a")]),
@@ -640,6 +643,7 @@ speculate!{
             it "associates Self type with self argument" {
                 assert_eq!(
                     new_analyzer().formal_argument(
+                        0,
                         node!("Function::formal_argument" => [leaf!("self")]).into_node(),
                     ),
                     HirIdentifierBinding::new(
@@ -649,6 +653,20 @@ speculate!{
                             data_type: HirDataType::Primitive(HirPrimitiveDataType::SelfType),
                         },
                     ),
+                );
+            }
+
+            it "allows self argument in first position only" {
+                let mut analyzer1 = new_analyzer();
+
+                analyzer1.formal_argument(
+                    1,
+                    node!("Function::formal_argument" => [leaf!("self")]).into_node(),
+                );
+
+                assert_eq!(
+                    analyzer1.logs,
+                    vec![TreeHirifierLog::Error(TreeHirifierError::SelfArgumentMustLocateFirstPosition)],
                 );
             }
         }

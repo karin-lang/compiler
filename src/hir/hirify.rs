@@ -17,10 +17,21 @@ pub struct AstModule<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum TreeHirifierLog {
+    Error(TreeHirifierError),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum TreeHirifierError {
+    SelfArgumentMustLocateFirstPosition,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct TreeHirifier {
     path_index_generator: HirPathIndexGenerator,
     pub(crate) path_tree: HirPathTree,
     pub(crate) items: Vec<HirPathIndexBinding<HirItem>>,
+    pub(crate) logs: Vec<TreeHirifierLog>,
 }
 
 impl TreeHirifier {
@@ -29,20 +40,24 @@ impl TreeHirifier {
             path_index_generator: HirPathIndexGenerator::new(),
             path_tree: HirPathTree::new(),
             items: Vec::new(),
+            logs: Vec::new(),
         }
     }
 
-    pub fn hirify(hakos: Vec<&AstHako>) -> Hir {
+    pub fn hirify(hakos: Vec<&AstHako>) -> (Hir, Vec<TreeHirifierLog>) {
         let mut analyzer = TreeHirifier::new();
 
         for each_hako in &hakos {
             analyzer.hako(each_hako);
         }
 
-        Hir {
-            path_tree: analyzer.path_tree,
-            items: analyzer.items,
-        }
+        (
+            Hir {
+                path_tree: analyzer.path_tree,
+                items: analyzer.items,
+            },
+            analyzer.logs,
+        )
     }
 
     pub fn hako(&mut self, hako: &AstHako) {
@@ -137,8 +152,8 @@ impl TreeHirifier {
             None => HirDataType::Primitive(HirPrimitiveDataType::None),
         };
 
-        let arguments = node.children.find_node("args").children.filter_nodes().iter()
-            .map(|v| self.formal_argument(v)).collect();
+        let arguments = node.children.find_node("args").children.filter_nodes().iter().enumerate()
+            .map(|(i, v)| self.formal_argument(i, v)).collect();
 
         let expressions = node.children.find_node("exprs").children.filter_nodes().iter()
             .map(|v| self.expression(v)).collect();
@@ -146,10 +161,14 @@ impl TreeHirifier {
         (id, HirFunction { accessibility, return_type, arguments, expressions })
     }
 
-    pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirIdentifierBinding<HirFormalArgument> {
+    pub fn formal_argument(&mut self, index: usize, node: &SyntaxNode) -> HirIdentifierBinding<HirFormalArgument> {
         let (id, data_type) = if let Some(id_node) = node.children.find_node_or_none("Identifier::identifier") {
             (self.identifier(id_node), self.data_type(node.children.find_node("DataType::data_type")))
         } else if node.children.has_leaf("self") {
+            if index != 0 {
+                self.logs.push(TreeHirifierLog::Error(TreeHirifierError::SelfArgumentMustLocateFirstPosition));
+            }
+
             ("self".to_string(), HirDataType::Primitive(HirPrimitiveDataType::SelfType))
         } else {
             unreachable!("formal argument must have an identifier or self keyword");
@@ -161,14 +180,7 @@ impl TreeHirifier {
             HirMutability::Immutable
         };
 
-        HirIdentifierBinding::new(
-            id.into(),
-            HirFormalArgument {
-                // todo: 構文ノードのmutabilityを反映させる
-                mutability,
-                data_type,
-            },
-        )
+        HirIdentifierBinding::new(id.into(), HirFormalArgument { mutability, data_type })
     }
 
     pub fn expression(&mut self, node: &SyntaxNode) -> HirExpression {
