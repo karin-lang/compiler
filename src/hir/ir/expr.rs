@@ -2,10 +2,10 @@ use crate::hir::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirExpression {
-    Literal(HirLiteral),
     Operation(Box<HirOperation>),
-    DataType(HirDataType),
+    Literal(HirLiteral),
     Identifier(HirIdentifier),
+    DataType(HirDataType),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -96,8 +96,22 @@ pub enum HirDataType {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirPrimitiveDataType {
+    Boolean,
+    S8,
+    S16,
+    S32,
+    S64,
+    Ssize,
+    U8,
+    U16,
+    U32,
+    U64,
     Usize,
     F32,
+    F64,
+    Character,
+    String,
+    None,
 }
 
 #[derive(Clone, Debug, PartialEq)]

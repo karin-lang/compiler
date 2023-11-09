@@ -33,7 +33,7 @@ impl Compiler<&str, Result<String, JsTranspilerError>, JsTranspilerOptions> for 
             Err(e) => return Err(JsTranspilerError::ParserError(e)),
         };
 
-        let mut hir = TreeHirifier::analyze(vec![
+        let mut hir = TreeHirifier::hirify(vec![
             &AstHako {
                 id: "test".to_string(),
                 modules: vec![

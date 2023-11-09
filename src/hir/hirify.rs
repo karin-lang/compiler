@@ -32,7 +32,7 @@ impl TreeHirifier {
         }
     }
 
-    pub fn analyze(hakos: Vec<&AstHako>) -> Hir {
+    pub fn hirify(hakos: Vec<&AstHako>) -> Hir {
         let mut analyzer = TreeHirifier::new();
 
         for each_hako in &hakos {
@@ -66,15 +66,14 @@ impl TreeHirifier {
 
     pub fn module(&mut self, module: &AstModule, parent: HirPathIndex) -> HirPathIndex {
         let path_index = self.path_index_generator.generate();
-        // todo: verify the performance of extend()
         let mut children = Vec::new();
 
-        let submodules: Vec<HirPathIndex> = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
-        children.extend(submodules);
+        let mut submodules: Vec<HirPathIndex> = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
+        children.append(&mut submodules);
 
-        let subitems: Vec<HirPathIndex> = module.node.children.filter_nodes().iter()
+        let mut subitems: Vec<HirPathIndex> = module.node.children.filter_nodes().iter()
             .map(|v| self.item(v, path_index)).collect();
-        children.extend(subitems);
+        children.append(&mut subitems);
 
         let path_node = HirPathNode {
             id: module.id.clone().into(),
@@ -133,6 +132,8 @@ impl TreeHirifier {
         let id = self.identifier(&node.children.find_node("Identifier::identifier"));
         let accessibility = self.accessibility(node.children.find_node("Main::accessibility"));
 
+        // todo: add return type
+
         let arguments = node.children.find_node("args").children.filter_nodes().iter()
             .map(|v| self.formal_argument(v)).collect();
 
@@ -145,6 +146,8 @@ impl TreeHirifier {
     pub fn formal_argument(&mut self, node: &SyntaxNode) -> HirIdentifierBinding<HirFormalArgument> {
         let id = self.identifier(node.children.find_node("Identifier::identifier"));
         let data_type = self.data_type(node.children.find_node("DataType::data_type"));
+
+        // todo: add mutability, reference and self
 
         HirIdentifierBinding::new(
             id.into(),
@@ -160,11 +163,58 @@ impl TreeHirifier {
         let content_node = node.children.get_node(0);
 
         match content_node.name.as_str() {
-            "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
             "Operation::operation" => self.operation(content_node),
-            "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
+            "Literal::literal" => HirExpression::Literal(self.literal(content_node)),
             "Identifier::identifier" => HirExpression::Identifier(self.identifier(content_node).into()),
+            "DataType::data_type" => HirExpression::DataType(self.data_type(content_node)),
             _ => unreachable!("unknown expression"),
+        }
+    }
+
+    pub fn operation(&mut self, node: &SyntaxNode) -> HirExpression {
+        let tokens = node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect();
+
+        match OperationParser::parse(tokens) {
+            Ok(v) => v,
+            Err(e) => unimplemented!("{:?}", e),
+        }
+    }
+
+    pub fn operation_token(&mut self, node: &SyntaxNode) -> HirOperationToken {
+        match node.name.as_ref() {
+            "operator" => HirOperationToken::Operator(self.operator(node)),
+            _ => HirOperationToken::Term(self.expression(node))
+        }
+    }
+
+    pub fn operator(&mut self, node: &SyntaxNode) -> HirOperator {
+        if let Some(operator_leaf) = node.children.get_leaf_or_none(0) {
+            match operator_leaf.value.as_ref() {
+                "=" => HirOperator::Substitute,
+                "+" => HirOperator::Add,
+                "-" => HirOperator::Subtract,
+                "*" => HirOperator::Multiply,
+                "!e" => HirOperator::Not,
+                "~e" => HirOperator::BitNot,
+                "-e" => HirOperator::Negative,
+                "e!" => HirOperator::Nonnize,
+                "e?" => HirOperator::Propagate,
+                "." => HirOperator::MemberAccess,
+                "::" => HirOperator::Path,
+                "(" => HirOperator::GroupBegin,
+                ")" => HirOperator::GroupEnd,
+                _ => todo!("add more operators"),
+            }
+        } else {
+            let operator_node = node.children.get_node(0);
+
+            match operator_node.name.as_str() {
+                "Operation::function_call_operator" => {
+                    let arguments = operator_node.children.filter_nodes().iter().map(|v| self.expression(v)).collect();
+                    HirOperator::FunctionCall(arguments)
+                },
+                _ => unreachable!("unknown format of operator node"),
+            }
         }
     }
 
@@ -229,53 +279,6 @@ impl TreeHirifier {
         }
     }
 
-    pub fn operation(&mut self, node: &SyntaxNode) -> HirExpression {
-        let tokens = node.children.iter().map(|each_child| self.operation_token(each_child.into_node())).collect();
-
-        match OperationParser::parse(tokens) {
-            Ok(v) => v,
-            Err(e) => unimplemented!("{:?}", e),
-        }
-    }
-
-    pub fn operation_token(&mut self, node: &SyntaxNode) -> HirOperationToken {
-        match node.name.as_ref() {
-            "operator" => HirOperationToken::Operator(self.operator(node)),
-            _ => HirOperationToken::Term(self.expression(node))
-        }
-    }
-
-    pub fn operator(&mut self, node: &SyntaxNode) -> HirOperator {
-        if let Some(operator_leaf) = node.children.get_leaf_or_none(0) {
-            match operator_leaf.value.as_ref() {
-                "=" => HirOperator::Substitute,
-                "+" => HirOperator::Add,
-                "-" => HirOperator::Subtract,
-                "*" => HirOperator::Multiply,
-                "!e" => HirOperator::Not,
-                "~e" => HirOperator::BitNot,
-                "-e" => HirOperator::Negative,
-                "e!" => HirOperator::Nonnize,
-                "e?" => HirOperator::Propagate,
-                "." => HirOperator::MemberAccess,
-                "::" => HirOperator::Path,
-                "(" => HirOperator::GroupBegin,
-                ")" => HirOperator::GroupEnd,
-                _ => todo!("add more operators"),
-            }
-        } else {
-            let operator_node = node.children.get_node(0);
-
-            match operator_node.name.as_str() {
-                "Operation::function_call_operator" => {
-                    let arguments = operator_node.children.filter_nodes().iter().map(|v| self.expression(v)).collect();
-                    HirOperator::FunctionCall(arguments)
-                },
-                _ => unreachable!("unknown format of operator node"),
-            }
-        }
-    }
-
     pub fn data_type(&mut self, node: &SyntaxNode) -> HirDataType {
         let content = node.children.get_node(0);
 
@@ -292,8 +295,22 @@ impl TreeHirifier {
 
     pub fn primitive_data_type(&mut self, node: &SyntaxNode) -> HirPrimitiveDataType {
         match node.children.get_leaf(0).value.as_str() {
+            "bool" => HirPrimitiveDataType::Boolean,
+            "s8" => HirPrimitiveDataType::S8,
+            "s16" => HirPrimitiveDataType::S16,
+            "s32" => HirPrimitiveDataType::S32,
+            "s64" => HirPrimitiveDataType::S64,
+            "ssize" => HirPrimitiveDataType::Ssize,
+            "u8" => HirPrimitiveDataType::U8,
+            "u16" => HirPrimitiveDataType::U16,
+            "u32" => HirPrimitiveDataType::U32,
+            "u64" => HirPrimitiveDataType::U64,
             "usize" => HirPrimitiveDataType::Usize,
             "f32" => HirPrimitiveDataType::F32,
+            "f64" => HirPrimitiveDataType::F64,
+            "char" => HirPrimitiveDataType::Character,
+            "str" => HirPrimitiveDataType::String,
+            "none" => HirPrimitiveDataType::None,
             _ => unreachable!("unknown primitive data type"),
         }
     }
