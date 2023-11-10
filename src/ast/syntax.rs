@@ -15,6 +15,7 @@ impl Syntax {
         volt.add_module(Symbol::new());
         volt.add_module(Identifier::new());
         volt.add_module(Item::new());
+        volt.add_module(UseDeclaration::new());
         volt.add_module(Function::new());
         volt.add_module(Expression::new());
         volt.add_module(Literal::new());

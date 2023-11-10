@@ -158,7 +158,7 @@ pub struct HirPathNode {
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirPathKind {
     Hako,
-    Module,
+    Module { use_declarations: Vec<HirPath> },
     Function,
     Struct,
     Enum,

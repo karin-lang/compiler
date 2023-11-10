@@ -93,7 +93,7 @@ speculate!{
                             HirPathIndex::from(1),
                             HirPathNode {
                                 id: "m".into(),
-                                kind: HirPathKind::Module,
+                                kind: HirPathKind::Module { use_declarations: Vec::new() },
                                 parent: Some(0.into()),
                                 children: Vec::new(),
                             },
@@ -148,7 +148,7 @@ speculate!{
                             HirPathIndex::from(1),
                             HirPathNode {
                                 id: "m".into(),
-                                kind: HirPathKind::Module,
+                                kind: HirPathKind::Module { use_declarations: Vec::new() },
                                 parent: Some(0.into()),
                                 children: vec![2.into()],
                             },
@@ -261,7 +261,7 @@ speculate!{
                         HirPathIndex::from(0),
                         HirPathNode {
                             id: "m".into(),
-                            kind: HirPathKind::Module,
+                            kind: HirPathKind::Module { use_declarations: Vec::new() },
                             parent: Some(HirPathIndex::from(100)),
                             children: Vec::new(),
                         },
@@ -297,7 +297,7 @@ speculate!{
                             HirPathIndex::from(0),
                             HirPathNode {
                                 id: "m".into(),
-                                kind: HirPathKind::Module,
+                                kind: HirPathKind::Module { use_declarations: Vec::new() },
                                 parent: Some(HirPathIndex::from(100)),
                                 children: vec![1.into()],
                             },
@@ -306,7 +306,7 @@ speculate!{
                             HirPathIndex::from(1),
                             HirPathNode {
                                 id: "sm".into(),
-                                kind: HirPathKind::Module,
+                                kind: HirPathKind::Module { use_declarations: Vec::new() },
                                 parent: Some(HirPathIndex::from(0)),
                                 children: Vec::new(),
                             },
@@ -350,7 +350,7 @@ speculate!{
                             HirPathIndex::from(0),
                             HirPathNode {
                                 id: "m".into(),
-                                kind: HirPathKind::Module,
+                                kind: HirPathKind::Module { use_declarations: Vec::new() },
                                 parent: Some(HirPathIndex::from(100)),
                                 children: vec![1.into()],
                             },
@@ -428,7 +428,7 @@ speculate!{
         it "reflects path indexes for itself and parent" {
             let mut analyzer = new_analyzer();
 
-            let path_index = analyzer.item(
+            let result = analyzer.item(
                 node!("Item::item" => [
                     node!("Function::function" => [
                         node!("Main::accessibility" => []),
@@ -440,7 +440,7 @@ speculate!{
                 100.into(),
             );
 
-            assert_eq!(path_index, 0.into());
+            assert_eq!(result, ItemHirifierResult::ItemPathIndex(0.into()));
 
             assert_eq!(
                 analyzer.path_tree,
@@ -459,6 +459,19 @@ speculate!{
             );
         }
 
+        it "hirifies use declaration" {
+            assert_eq!(
+                new_analyzer().item(
+                    node!("Item::item" => [
+                        node!("UseDeclaration::use_declaration" => [leaf!("a")])
+                    ]).into_node(),
+                    100.into(),
+                ),
+                ItemHirifierResult::UseDeclaration(HirPath::Unresolved(vec!["a".into()])),
+            );
+        }
+
+        // fix to item()
         it "hirifies function" {
             assert_eq!(
                 new_analyzer().function(
@@ -478,6 +491,57 @@ speculate!{
                         expressions: Vec::new(),
                     },
                 ),
+            );
+        }
+    }
+
+    describe "use declaration" {
+        it "returns unresolved path" {
+            assert_eq!(
+                new_analyzer().use_declaration(
+                    node!("UseDeclaration::use_declaration" => [leaf!("a")]).into_node(),
+                ),
+                HirPath::Unresolved(vec!["a".into()]),
+            );
+        }
+
+        it "treat some keywords as a segment" {
+            assert_eq!(
+                new_analyzer().use_declaration(
+                    node!("UseDeclaration::use_declaration" => [leaf!("self")]).into_node(),
+                ),
+                HirPath::Unresolved(vec!["self".into()]),
+            );
+        }
+
+        it "allows keyword segment in first position only" {
+            let mut analyzer = new_analyzer();
+
+            let result = analyzer.use_declaration(
+                node!("UseDeclaration::use_declaration" => [leaf!("self")]).into_node(),
+            );
+
+            assert_eq!(
+                result,
+                HirPath::Unresolved(vec!["self".into()]),
+            );
+
+            assert_eq!(analyzer.logs, Vec::new());
+
+            let mut analyzer = new_analyzer();
+
+            let result = analyzer.use_declaration(
+                node!("UseDeclaration::use_declaration" => [leaf!("a"), leaf!("self")]).into_node(),
+            );
+
+            assert_eq!(
+                result,
+                HirPath::Unresolved(vec!["a".into(), "self".into()]),
+            );
+
+            assert_eq!(
+                analyzer.logs,
+                vec![TreeHirifierLog::Error(TreeHirifierError::PathSegmentMustLocateFirstPosition { path_segment: "self".to_string() })],
             );
         }
     }
@@ -657,15 +721,24 @@ speculate!{
             }
 
             it "allows self argument in first position only" {
-                let mut analyzer1 = new_analyzer();
+                let mut analyzer = new_analyzer();
 
-                analyzer1.formal_argument(
+                analyzer.formal_argument(
+                    0,
+                    node!("Function::formal_argument" => [leaf!("self")]).into_node(),
+                );
+
+                assert_eq!(analyzer.logs, Vec::new());
+
+                let mut analyzer = new_analyzer();
+
+                analyzer.formal_argument(
                     1,
                     node!("Function::formal_argument" => [leaf!("self")]).into_node(),
                 );
 
                 assert_eq!(
-                    analyzer1.logs,
+                    analyzer.logs,
                     vec![TreeHirifierLog::Error(TreeHirifierError::SelfArgumentMustLocateFirstPosition)],
                 );
             }

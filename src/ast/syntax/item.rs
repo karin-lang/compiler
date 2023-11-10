@@ -11,7 +11,27 @@ pub(super) struct Item {
 impl VoltModule for Item {
     fn new() -> Item {
         define_rules!{
-            item := choice![Function::function()];
+            item := choice![UseDeclaration::use_declaration(), Function::function()];
+        }
+    }
+}
+
+#[derive(VoltModuleDefinition)]
+pub(super) struct UseDeclaration {
+    use_declaration: Element,
+}
+
+impl VoltModule for UseDeclaration {
+    fn new() -> UseDeclaration {
+        define_rules!{
+            use_declaration := seq![
+                str("use").hide(), WHITESPACE_REQUIRED(),
+                choice![
+                    str("hako"),
+                    str("self"),
+                    Identifier::identifier().expand_once(),
+                ].separate(seq![WHITESPACE(), str("::").hide(), WHITESPACE()]),
+            ];
         }
     }
 }

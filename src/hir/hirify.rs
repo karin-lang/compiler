@@ -23,7 +23,14 @@ pub enum TreeHirifierLog {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TreeHirifierError {
+    PathSegmentMustLocateFirstPosition { path_segment: String },
     SelfArgumentMustLocateFirstPosition,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum ItemHirifierResult {
+    ItemPathIndex(HirPathIndex),
+    UseDeclaration(HirPath),
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -82,17 +89,21 @@ impl TreeHirifier {
     pub fn module(&mut self, module: &AstModule, parent: HirPathIndex) -> HirPathIndex {
         let path_index = self.path_index_generator.generate();
         let mut children = Vec::new();
+        let mut use_declarations = Vec::new();
 
         let mut submodules: Vec<HirPathIndex> = module.submodules.iter().map(|v| self.module(v, path_index)).collect();
         children.append(&mut submodules);
 
-        let mut subitems: Vec<HirPathIndex> = module.node.children.filter_nodes().iter()
-            .map(|v| self.item(v, path_index)).collect();
-        children.append(&mut subitems);
+        for each_subitem_node in module.node.children.filter_nodes() {
+            match self.item(each_subitem_node, path_index) {
+                ItemHirifierResult::ItemPathIndex(path_index) => children.push(path_index),
+                ItemHirifierResult::UseDeclaration(path) => use_declarations.push(path),
+            }
+        }
 
         let path_node = HirPathNode {
             id: module.id.clone().into(),
-            kind: HirPathKind::Module,
+            kind: HirPathKind::Module { use_declarations },
             parent: Some(parent),
             children,
         };
@@ -117,11 +128,12 @@ impl TreeHirifier {
         }
     }
 
-    pub fn item(&mut self, node: &SyntaxNode, parent: HirPathIndex) -> HirPathIndex {
+    pub fn item(&mut self, node: &SyntaxNode, parent: HirPathIndex) -> ItemHirifierResult {
         let path_index = self.path_index_generator.generate();
         let content = node.children.get_node(0);
 
         let (path_node, item) = match content.name.as_str() {
+            "UseDeclaration::use_declaration" => return ItemHirifierResult::UseDeclaration(self.use_declaration(content)),
             "Function::function" => {
                 let (id, function) = self.function(content);
 
@@ -140,7 +152,28 @@ impl TreeHirifier {
         self.path_tree.add_node(&mut self.path_index_generator, Some(path_index), path_node);
         self.items.push(HirPathIndexBinding::new(path_index, item));
 
-        path_index
+        ItemHirifierResult::ItemPathIndex(path_index)
+    }
+
+    pub fn use_declaration(&mut self, node: &SyntaxNode) -> HirPath {
+        let mut segments = Vec::new();
+
+        for (index, each_identifier) in node.children.filter_leaves().iter().enumerate() {
+            let new_segment = each_identifier.value.clone();
+
+            if index != 0 {
+                match new_segment.as_str() {
+                    "hako" | "self" => self.logs.push(
+                        TreeHirifierLog::Error(TreeHirifierError::PathSegmentMustLocateFirstPosition { path_segment: new_segment.to_string() }),
+                    ),
+                    _ => (),
+                }
+            }
+
+            segments.push(new_segment.into());
+        }
+
+        HirPath::Unresolved(segments)
     }
 
     pub fn function(&mut self, node: &SyntaxNode) -> (String, HirFunction) {

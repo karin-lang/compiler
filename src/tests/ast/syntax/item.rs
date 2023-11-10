@@ -34,6 +34,17 @@ speculate!{
     }
 
     describe "item" {
+        it "matches use declaration" {
+            expect_success_eq("use a::b", "Item::item", tree!(
+                node!("Item::item" => [
+                    node!("UseDeclaration::use_declaration" => [
+                        leaf!("a"),
+                        leaf!("b"),
+                    ]),
+                ])
+            ));
+        }
+
         it "matches function" {
             expect_success_eq("fn f() {}", "Item::item", tree!(
                 node!("Item::item" => [
@@ -43,6 +54,26 @@ speculate!{
                         node!("args" => []),
                         node!("exprs" => []),
                     ]),
+                ])
+            ));
+        }
+    }
+
+    describe "use declaration" {
+        it "separates path by double colon" {
+            expect_success_eq("use a::b", "UseDeclaration::use_declaration", tree!(
+                node!("UseDeclaration::use_declaration" => [
+                    leaf!("a"),
+                    leaf!("b"),
+                ])
+            ));
+        }
+
+        it "allows some keywords as a path segment" {
+            expect_success_eq("use self::a", "UseDeclaration::use_declaration", tree!(
+                node!("UseDeclaration::use_declaration" => [
+                    leaf!("self"),
+                    leaf!("a"),
                 ])
             ));
         }

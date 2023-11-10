@@ -3,6 +3,7 @@ use crate::hir::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum HirItem {
+    UseDeclaration(HirPath),
     Function(HirFunction),
     Struct,
     Enum,

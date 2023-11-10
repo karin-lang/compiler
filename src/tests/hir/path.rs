@@ -68,7 +68,7 @@ speculate!{
 
             let subnode = HirPathNode {
                 id: "subnode".into(),
-                kind: HirPathKind::Module,
+                kind: HirPathKind::Module { use_declarations: Vec::new() },
                 parent: Some(0.into()),
                 children: Vec::new(),
             };
