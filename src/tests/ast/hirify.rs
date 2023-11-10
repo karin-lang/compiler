@@ -471,26 +471,20 @@ speculate!{
             );
         }
 
-        // fix to item()
         it "hirifies function" {
             assert_eq!(
-                new_analyzer().function(
-                    node!("Function::function" => [
-                        node!("Main::accessibility" => []),
-                        node!("Identifier::identifier" => [leaf!("f")]),
-                        node!("args" => []),
-                        node!("exprs" => []),
+                new_analyzer().item(
+                    node!("Item::item" => [
+                        node!("Function::function" => [
+                            node!("Main::accessibility" => []),
+                            node!("Identifier::identifier" => [leaf!("f")]),
+                            node!("args" => []),
+                            node!("exprs" => []),
+                        ]),
                     ]).into_node(),
+                    100.into(),
                 ),
-                (
-                    "f".to_string(),
-                    HirFunction {
-                        accessibility: HirAccessibility::Private,
-                        return_type: HirDataType::Primitive(HirPrimitiveDataType::None),
-                        arguments: Vec::new(),
-                        expressions: Vec::new(),
-                    },
-                ),
+                ItemHirifierResult::ItemPathIndex(0.into()),
             );
         }
     }
